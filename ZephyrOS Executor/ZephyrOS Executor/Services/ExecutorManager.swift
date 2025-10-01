@@ -230,6 +230,13 @@ class ExecutorManager: ObservableObject {
                         addLog("✗ Failed to connect to ZMemory", level: .error)
                     }
                 }
+            } catch APIError.unauthorized {
+                await MainActor.run {
+                    state.isConnectedToZMemory = false
+                    addLog("✗ ZMemory authentication failed - please re-login", level: .error)
+                    // Trigger logout to force re-authentication
+                    signOut()
+                }
             } catch {
                 await MainActor.run {
                     state.isConnectedToZMemory = false
@@ -298,6 +305,12 @@ class ExecutorManager: ObservableObject {
                 await executeTask(task)
             }
 
+        } catch APIError.unauthorized {
+            await MainActor.run {
+                addLog("Authentication expired - please re-login", level: .error)
+                // Trigger logout to force re-authentication
+                signOut()
+            }
         } catch {
             await MainActor.run {
                 addLog("Polling error: \(error.localizedDescription)", level: .error)
@@ -358,10 +371,21 @@ class ExecutorManager: ObservableObject {
                 addLog("✓ Task completed: \(taskId)", level: .info)
             }
 
+        } catch APIError.unauthorized {
+            await MainActor.run {
+                addLog("Authentication expired during task execution - please re-login", level: .error)
+                // Trigger logout to force re-authentication
+                signOut()
+            }
         } catch {
             // Fail task
             do {
                 try await zMemory.failTask(taskId: taskId, error: error.localizedDescription)
+            } catch APIError.unauthorized {
+                await MainActor.run {
+                    addLog("Authentication expired - please re-login", level: .error)
+                    signOut()
+                }
             } catch {
                 await MainActor.run {
                     addLog("Failed to report task failure: \(error.localizedDescription)", level: .error)

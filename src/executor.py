@@ -14,6 +14,9 @@ from zmemory_client import ZMemoryClient
 from claude_client import ClaudeClient
 from config import ExecutorConfig
 from auth_manager import AuthTokenManager
+from terminal_manager import TerminalSessionManager
+from claude_code_executor import ClaudeCodeExecutor
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +35,22 @@ class TaskExecutor:
         self.auth_manager = AuthTokenManager(config.supabase_url, config.supabase_anon_key)
         self.zmemory = ZMemoryClient(config.zmemory_api_url, auth_manager=self.auth_manager)
         self.claude = ClaudeClient(config.anthropic_api_key, config.claude_model)
+
+        # Initialize terminal execution components if needed
+        self.terminal_manager = None
+        self.terminal_executor = None
+        if config.execution_mode == "terminal":
+            self.terminal_manager = TerminalSessionManager(
+                claude_path=config.claude_code_path,
+                show_window=config.show_terminal_window,
+                terminal_app=config.terminal_app
+            )
+            self.terminal_executor = ClaudeCodeExecutor(
+                workspace_base=Path(config.workspace_base_dir),
+                terminal_manager=self.terminal_manager,
+                max_execution_time=config.task_timeout_seconds,
+                auto_cleanup=config.auto_cleanup_workspaces
+            )
 
         self.running = False
         self.task_queue = Queue()
@@ -174,10 +193,15 @@ class TaskExecutor:
             # Update status to in_progress
             self.zmemory.update_task_status(task_id, 'in_progress', progress=0)
 
-            logger.info(f"Sending task {task_id} to Claude...")
+            # Determine execution mode (check task-specific override first)
+            execution_mode = task.get('execution_mode', self.config.execution_mode)
 
-            # Execute with Claude
-            result = self.claude.execute_task(task_description, task_context)
+            if execution_mode == 'terminal':
+                logger.info(f"Executing task {task_id} in terminal mode...")
+                result = self._execute_in_terminal(task)
+            else:
+                logger.info(f"Executing task {task_id} via Claude API...")
+                result = self.claude.execute_task(task_description, task_context)
 
             if result['success']:
                 # Update statistics
@@ -187,10 +211,12 @@ class TaskExecutor:
 
                 # Prepare result payload
                 completion_result = {
-                    'response': result['response'],
+                    'response': result.get('response', result.get('output', '')),
                     'usage': result.get('usage', {}),
                     'model': result.get('model', self.config.claude_model),
-                    'execution_time_seconds': (datetime.utcnow() - start_time).total_seconds()
+                    'execution_time_seconds': result.get('execution_time', (datetime.utcnow() - start_time).total_seconds()),
+                    'artifacts': result.get('artifacts', []),
+                    'execution_mode': execution_mode
                 }
 
                 # Complete task in ZMemory
@@ -214,6 +240,32 @@ class TaskExecutor:
             # Remove from active tasks
             if task_id in self.active_tasks:
                 del self.active_tasks[task_id]
+
+    def _execute_in_terminal(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Execute task using Claude Code in terminal.
+
+        Args:
+            task: Task dictionary
+
+        Returns:
+            Result dictionary
+        """
+        if not self.terminal_executor:
+            raise RuntimeError("Terminal executor not initialized. Set EXECUTION_MODE=terminal")
+
+        # Progress callback for ZMemory updates
+        def update_progress(task_id: str, progress: int):
+            try:
+                self.zmemory.update_task_status(task_id, 'in_progress', progress=progress)
+            except Exception as e:
+                logger.error(f"Failed to update progress: {e}")
+
+        # Execute in terminal with monitoring
+        task_id = task['id']
+        result = self.terminal_executor.execute_task_in_terminal(task)
+
+        return result
 
     def get_status(self) -> Dict[str, Any]:
         """

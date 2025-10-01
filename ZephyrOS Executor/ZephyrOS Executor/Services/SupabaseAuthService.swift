@@ -84,16 +84,24 @@ class SupabaseAuthService: NSObject, ObservableObject {
         UserDefaults.standard.removeObject(forKey: "supabase_user_id")
     }
 
-    func restoreSession() {
+    func restoreSession() async {
         guard let token = UserDefaults.standard.string(forKey: "supabase_access_token") else {
             return
         }
 
-        accessToken = token
-        userEmail = UserDefaults.standard.string(forKey: "supabase_user_email")
-        userName = UserDefaults.standard.string(forKey: "supabase_user_name")
-        userId = UserDefaults.standard.string(forKey: "supabase_user_id")
-        isAuthenticated = true
+        // Validate the token by attempting to fetch user info
+        do {
+            try await fetchUserInfo(token: token)
+
+            // If successful, restore the session
+            // Note: fetchUserInfo already sets userId, userEmail, and userName
+            // from the API response, so we only need to set the access token
+            accessToken = token
+            isAuthenticated = true
+        } catch {
+            // Token is invalid or expired - clear stored credentials and sign out
+            signOut()
+        }
     }
 
     // MARK: - Private Methods

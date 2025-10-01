@@ -176,7 +176,11 @@ class AuthTokenManager:
         # Check cached token first
         if self.cached_token and self.token_expiry:
             if datetime.now() < self.token_expiry - timedelta(minutes=5):
-                return self.cached_token
+                # Validate the token before returning it
+                if await self._validate_token(self.cached_token):
+                    return self.cached_token
+                else:
+                    logger.warning("Cached token is invalid, attempting to refresh...")
 
         # Try to load from cache file
         cached_session = self._load_cached_session()
@@ -188,28 +192,62 @@ class AuthTokenManager:
                     cached_session.get('refresh_token', '')
                 )
                 if response and response.session:
-                    self.cached_token = response.session.access_token
-                    self.token_expiry = datetime.fromtimestamp(response.session.expires_at) if response.session.expires_at else None
-                    return self.cached_token
+                    # Validate the restored session
+                    if await self._validate_token(response.session.access_token):
+                        self.cached_token = response.session.access_token
+                        self.token_expiry = datetime.fromtimestamp(response.session.expires_at) if response.session.expires_at else None
+                        return self.cached_token
+                    else:
+                        logger.warning("Restored session token is invalid")
+                        self._clear_cached_session()
             except Exception as e:
                 logger.warning(f"Failed to restore session: {e}")
+                self._clear_cached_session()
 
         # Try to refresh the session
         try:
             response = self.supabase.auth.get_session()
             if response and response.access_token:
-                self.cached_token = response.access_token
-                # Update cache
-                session_data = self._load_cached_session() or {}
-                session_data['access_token'] = response.access_token
-                self._save_session(session_data)
-                return self.cached_token
+                # Validate the refreshed token
+                if await self._validate_token(response.access_token):
+                    self.cached_token = response.access_token
+                    # Update cache
+                    session_data = self._load_cached_session() or {}
+                    session_data['access_token'] = response.access_token
+                    self._save_session(session_data)
+                    return self.cached_token
         except Exception as e:
             logger.warning(f"Failed to refresh session: {e}")
 
-        # No valid session
+        # No valid session - clear cache and require re-login
+        self._clear_cached_session()
         logger.warning("⚠️  No valid authentication session. Please run: python -m src.cli login")
         return None
+
+    async def _validate_token(self, token: str) -> bool:
+        """
+        Validate a token by making a test API call.
+
+        Args:
+            token: The token to validate
+
+        Returns:
+            True if token is valid, False otherwise
+        """
+        try:
+            # Try to get user info with the token
+            url = f"{self.supabase_url}/auth/v1/user"
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "apikey": self.supabase_anon_key
+            }
+
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, headers=headers, timeout=10.0)
+                return response.status_code == 200
+        except Exception as e:
+            logger.debug(f"Token validation failed: {e}")
+            return False
 
     async def get_auth_headers(self) -> Dict[str, str]:
         """

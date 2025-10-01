@@ -94,9 +94,9 @@ struct LoginView: View {
             }
         }
         .onAppear {
-            supabaseAuthService.restoreSession()
-            if supabaseAuthService.isAuthenticated, let accessToken = supabaseAuthService.accessToken {
-                _Concurrency.Task { @MainActor in
+            _Concurrency.Task { @MainActor in
+                await supabaseAuthService.restoreSession()
+                if supabaseAuthService.isAuthenticated, let accessToken = supabaseAuthService.accessToken {
                     executorManager.setSupabaseToken(accessToken)
                     isAuthenticated = executorManager.isAuthenticated
                 }

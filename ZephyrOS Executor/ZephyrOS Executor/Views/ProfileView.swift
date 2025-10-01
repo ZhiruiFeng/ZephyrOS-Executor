@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject var executorManager: ExecutorManager
-    @StateObject private var authService = GoogleAuthService()
+    @StateObject private var authService = SupabaseAuthService()
     @State private var showingSignOutAlert = false
 
     var body: some View {
@@ -49,7 +49,9 @@ struct ProfileView: View {
             Text("Are you sure you want to sign out? The executor will stop and you'll need to sign in again.")
         }
         .onAppear {
-            authService.restoreSession()
+            _Concurrency.Task { @MainActor in
+                await authService.restoreSession()
+            }
         }
     }
 
@@ -62,7 +64,7 @@ struct ProfileView: View {
 // MARK: - User Info Card
 
 struct UserInfoCard: View {
-    @ObservedObject var authService: GoogleAuthService
+    @ObservedObject var authService: SupabaseAuthService
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {

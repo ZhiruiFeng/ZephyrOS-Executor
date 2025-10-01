@@ -86,15 +86,25 @@ class GoogleAuthService: NSObject, ObservableObject {
         UserDefaults.standard.removeObject(forKey: "google_user_name")
     }
 
-    func restoreSession() {
+    func restoreSession() async {
         // Try to restore from stored credentials
-        if let token = UserDefaults.standard.string(forKey: "google_access_token"),
-           let email = UserDefaults.standard.string(forKey: "google_user_email") {
+        guard let token = UserDefaults.standard.string(forKey: "google_access_token") else {
+            return
+        }
+
+        // Validate the token by attempting to fetch user info
+        do {
+            try await fetchUserInfo(accessToken: token)
+
+            // If successful, restore the session
+            // Note: fetchUserInfo already sets userEmail and userName
+            // from the API response, so we only need to set the tokens
             userToken = token
             idToken = UserDefaults.standard.string(forKey: "google_id_token")
-            userEmail = email
-            userName = UserDefaults.standard.string(forKey: "google_user_name")
             isAuthenticated = true
+        } catch {
+            // Token is invalid or expired - clear stored credentials and sign out
+            signOut()
         }
     }
 

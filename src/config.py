@@ -35,6 +35,15 @@ class ExecutorConfig:
     max_tokens_per_request: int = 4096
     task_timeout_seconds: int = 600
 
+    # Terminal execution settings
+    execution_mode: str = "api"  # "api" or "terminal"
+    claude_code_path: str = "/usr/local/bin/claude"
+    show_terminal_window: bool = True
+    terminal_app: str = "Terminal"  # "Terminal" or "iTerm"
+    workspace_base_dir: str = "/tmp/zephyros-tasks"
+    auto_cleanup_workspaces: bool = True
+    max_workspace_age_hours: int = 24
+
     @classmethod
     def from_env(cls) -> "ExecutorConfig":
         """
@@ -78,7 +87,14 @@ class ExecutorConfig:
             max_concurrent_tasks=int(os.getenv("MAX_CONCURRENT_TASKS", "2")),
             polling_interval_seconds=int(os.getenv("POLLING_INTERVAL_SECONDS", "30")),
             max_tokens_per_request=int(os.getenv("MAX_TOKENS_PER_REQUEST", "4096")),
-            task_timeout_seconds=int(os.getenv("TASK_TIMEOUT_SECONDS", "600"))
+            task_timeout_seconds=int(os.getenv("TASK_TIMEOUT_SECONDS", "600")),
+            execution_mode=os.getenv("EXECUTION_MODE", "api"),
+            claude_code_path=os.getenv("CLAUDE_CODE_PATH", "/usr/local/bin/claude"),
+            show_terminal_window=os.getenv("SHOW_TERMINAL_WINDOW", "true").lower() == "true",
+            terminal_app=os.getenv("TERMINAL_APP", "Terminal"),
+            workspace_base_dir=os.getenv("WORKSPACE_BASE_DIR", "/tmp/zephyros-tasks"),
+            auto_cleanup_workspaces=os.getenv("AUTO_CLEANUP_WORKSPACES", "true").lower() == "true",
+            max_workspace_age_hours=int(os.getenv("MAX_WORKSPACE_AGE_HOURS", "24"))
         )
 
     def validate(self) -> bool:
@@ -99,5 +115,11 @@ class ExecutorConfig:
 
         if self.max_tokens_per_request < 100:
             raise ValueError("max_tokens_per_request must be at least 100")
+
+        if self.execution_mode not in ["api", "terminal"]:
+            raise ValueError("execution_mode must be 'api' or 'terminal'")
+
+        if self.terminal_app not in ["Terminal", "iTerm"]:
+            raise ValueError("terminal_app must be 'Terminal' or 'iTerm'")
 
         return True
