@@ -109,16 +109,83 @@ class ExecutorManager: ObservableObject {
         }
     }
 
-    func setGoogleOAuthToken(_ token: String) {
+    func setSupabaseToken(_ token: String) {
+        // Ensure client is initialized if URL is available
+        if zMemoryClient == nil && !config.zMemoryAPIURL.isEmpty {
+            zMemoryClient = ZMemoryClient(baseURL: config.zMemoryAPIURL, apiKey: config.zMemoryAPIKey)
+        }
         zMemoryClient?.setOAuthToken(token)
         isAuthenticated = true
-        addLog("Authenticated with Google OAuth", level: .info)
+        addLog("Authenticated with Supabase", level: .info)
+    }
+
+    // Keep for backwards compatibility
+    func setGoogleOAuthToken(_ token: String) {
+        setSupabaseToken(token)
+    }
+
+    func signInWithGoogleToken(_ idToken: String) async {
+        // Exchange Google ID token for Supabase session
+        // Ensure client is initialized
+        if zMemoryClient == nil && !config.zMemoryAPIURL.isEmpty {
+            zMemoryClient = ZMemoryClient(baseURL: config.zMemoryAPIURL, apiKey: config.zMemoryAPIKey)
+        }
+
+        do {
+            let supabaseToken = try await exchangeGoogleTokenForSupabase(idToken: idToken)
+            zMemoryClient?.setOAuthToken(supabaseToken)
+            isAuthenticated = true
+            addLog("Authenticated with Google ID token via Supabase", level: .info)
+        } catch {
+            addLog("Failed to exchange Google token: \(error.localizedDescription)", level: .error)
+            isAuthenticated = false
+        }
+    }
+
+    private func exchangeGoogleTokenForSupabase(idToken: String) async throws -> String {
+        // Use Supabase's signInWithIdToken endpoint
+        let supabaseURL = Environment.supabaseURL
+        guard !supabaseURL.isEmpty else {
+            throw APIError.invalidURL
+        }
+
+        let url = URL(string: "\(supabaseURL)/auth/v1/token?grant_type=id_token")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(Environment.supabaseAnonKey, forHTTPHeaderField: "apikey")
+
+        let body = [
+            "provider": "google",
+            "id_token": idToken
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw APIError.unauthorized
+        }
+
+        struct SupabaseAuthResponse: Codable {
+            let accessToken: String
+            enum CodingKeys: String, CodingKey {
+                case accessToken = "access_token"
+            }
+        }
+
+        let authResponse = try JSONDecoder().decode(SupabaseAuthResponse.self, from: data)
+        return authResponse.accessToken
     }
 
     func signOut() {
         isAuthenticated = false
         stop()
         addLog("Signed out", level: .info)
+    }
+
+    func getZMemoryClient() -> ZMemoryClient? {
+        return zMemoryClient
     }
 
     // MARK: - Private Methods
@@ -336,15 +403,29 @@ struct ExecutorConfig: Codable {
     var maxTokensPerRequest: Int = 4096
 
     var isValid: Bool {
-        !zMemoryAPIURL.isEmpty && !zMemoryAPIKey.isEmpty && !anthropicAPIKey.isEmpty
+        !zMemoryAPIURL.isEmpty
     }
 
     static func load() -> ExecutorConfig {
+        // Try to load from UserDefaults first
         if let data = UserDefaults.standard.data(forKey: "ExecutorConfig"),
            let config = try? JSONDecoder().decode(ExecutorConfig.self, from: data) {
-            return config
+            // If loaded config has values, use it
+            if !config.zMemoryAPIURL.isEmpty {
+                return config
+            }
         }
-        return ExecutorConfig()
+
+        // Fallback to environment variables
+        var config = ExecutorConfig()
+        config.zMemoryAPIURL = Environment.zMemoryAPIURL
+        config.zMemoryAPIKey = Environment.zMemoryAPIKey
+        config.anthropicAPIKey = Environment.anthropicAPIKey
+        config.agentName = Environment.agentName
+        config.maxConcurrentTasks = Environment.maxConcurrentTasks
+        config.pollingIntervalSeconds = Environment.pollingIntervalSeconds
+
+        return config
     }
 
     func save() {

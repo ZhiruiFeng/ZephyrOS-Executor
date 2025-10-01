@@ -85,16 +85,21 @@ struct LoginView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(NSColor.windowBackgroundColor))
         .onChange(of: authService.isAuthenticated) { _, newValue in
-            if newValue, let token = authService.userToken {
-                executorManager.setGoogleOAuthToken(token)
-                isAuthenticated = true
+            if newValue, let idToken = authService.idToken {
+                // Exchange Google ID token for Supabase session
+                _Concurrency.Task {
+                    await executorManager.signInWithGoogleToken(idToken)
+                    isAuthenticated = executorManager.isAuthenticated
+                }
             }
         }
         .onAppear {
             authService.restoreSession()
-            if authService.isAuthenticated, let token = authService.userToken {
-                executorManager.setGoogleOAuthToken(token)
-                isAuthenticated = true
+            if authService.isAuthenticated, let idToken = authService.idToken {
+                _Concurrency.Task {
+                    await executorManager.signInWithGoogleToken(idToken)
+                    isAuthenticated = executorManager.isAuthenticated
+                }
             }
         }
     }

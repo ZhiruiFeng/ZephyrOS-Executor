@@ -12,6 +12,7 @@ import AuthenticationServices
 class GoogleAuthService: NSObject, ObservableObject {
     @Published var isAuthenticated = false
     @Published var userToken: String?
+    @Published var idToken: String?  // Google ID token for Supabase exchange
     @Published var userEmail: String?
     @Published var userName: String?
 
@@ -72,12 +73,14 @@ class GoogleAuthService: NSObject, ObservableObject {
 
     func signOut() {
         userToken = nil
+        idToken = nil
         userEmail = nil
         userName = nil
         isAuthenticated = false
 
         // Clear stored credentials
         UserDefaults.standard.removeObject(forKey: "google_access_token")
+        UserDefaults.standard.removeObject(forKey: "google_id_token")
         UserDefaults.standard.removeObject(forKey: "google_refresh_token")
         UserDefaults.standard.removeObject(forKey: "google_user_email")
         UserDefaults.standard.removeObject(forKey: "google_user_name")
@@ -88,6 +91,7 @@ class GoogleAuthService: NSObject, ObservableObject {
         if let token = UserDefaults.standard.string(forKey: "google_access_token"),
            let email = UserDefaults.standard.string(forKey: "google_user_email") {
             userToken = token
+            idToken = UserDefaults.standard.string(forKey: "google_id_token")
             userEmail = email
             userName = UserDefaults.standard.string(forKey: "google_user_name")
             isAuthenticated = true
@@ -152,7 +156,11 @@ class GoogleAuthService: NSObject, ObservableObject {
 
         // Store credentials
         userToken = tokenResponse.accessToken
+        idToken = tokenResponse.idToken  // Store ID token for Supabase exchange
         UserDefaults.standard.set(tokenResponse.accessToken, forKey: "google_access_token")
+        if let idToken = tokenResponse.idToken {
+            UserDefaults.standard.set(idToken, forKey: "google_id_token")
+        }
         if let refreshToken = tokenResponse.refreshToken {
             UserDefaults.standard.set(refreshToken, forKey: "google_refresh_token")
         }
@@ -194,12 +202,14 @@ extension GoogleAuthService: ASWebAuthenticationPresentationContextProviding {
 
 private struct TokenResponse: Decodable {
     let accessToken: String
+    let idToken: String?  // ID token for Supabase exchange
     let refreshToken: String?
     let expiresIn: Int
     let tokenType: String
 
     enum CodingKeys: String, CodingKey {
         case accessToken = "access_token"
+        case idToken = "id_token"
         case refreshToken = "refresh_token"
         case expiresIn = "expires_in"
         case tokenType = "token_type"

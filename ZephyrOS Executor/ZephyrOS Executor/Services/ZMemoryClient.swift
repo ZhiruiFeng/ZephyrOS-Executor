@@ -139,6 +139,138 @@ class ZMemoryClient {
         try validateResponse(response)
     }
 
+    // MARK: - AI Tasks API
+
+    func getAITasks(status: AITaskStatus? = nil, agentId: String? = nil, limit: Int = 100) async throws -> [AITask] {
+        var components = URLComponents(url: baseURL.appendingPathComponent("api/ai-tasks"), resolvingAgainstBaseURL: false)!
+        var queryItems: [URLQueryItem] = []
+
+        if let status = status {
+            queryItems.append(URLQueryItem(name: "status", value: status.rawValue))
+        }
+        if let agentId = agentId {
+            queryItems.append(URLQueryItem(name: "agent_id", value: agentId))
+        }
+        queryItems.append(URLQueryItem(name: "limit", value: String(limit)))
+        queryItems.append(URLQueryItem(name: "sort_by", value: "assigned_at"))
+        queryItems.append(URLQueryItem(name: "sort_order", value: "desc"))
+
+        components.queryItems = queryItems.isEmpty ? nil : queryItems
+
+        guard let url = components.url else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.setValue(getAuthorizationHeader(), forHTTPHeaderField: "Authorization")
+
+        // Debug logging
+        print("🔍 AI Tasks Request URL: \(url)")
+        print("🔍 Has OAuth Token: \(oauthToken != nil)")
+        print("🔍 Auth Header: \(getAuthorizationHeader().prefix(20))...")
+
+        let (data, response) = try await session.data(for: request)
+
+        if let httpResponse = response as? HTTPURLResponse {
+            print("🔍 AI Tasks Response Status: \(httpResponse.statusCode)")
+        }
+
+        try validateResponse(response)
+
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        decoder.dateDecodingStrategy = .iso8601
+
+        let taskResponse = try decoder.decode(AITasksResponse.self, from: data)
+        return taskResponse.aiTasks
+    }
+
+    func getAITask(id: String) async throws -> AITask {
+        let url = baseURL.appendingPathComponent("api/ai-tasks/\(id)")
+        var request = URLRequest(url: url)
+        request.setValue(getAuthorizationHeader(), forHTTPHeaderField: "Authorization")
+
+        let (data, response) = try await session.data(for: request)
+        try validateResponse(response)
+
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        decoder.dateDecodingStrategy = .iso8601
+
+        struct Response: Codable {
+            let aiTask: AITask
+            enum CodingKeys: String, CodingKey {
+                case aiTask = "ai_task"
+            }
+        }
+
+        let taskResponse = try decoder.decode(Response.self, from: data)
+        return taskResponse.aiTask
+    }
+
+    func updateAITaskStatus(id: String, status: AITaskStatus) async throws {
+        let url = baseURL.appendingPathComponent("api/ai-tasks/\(id)")
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.setValue(getAuthorizationHeader(), forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body = ["status": status.rawValue]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (_, response) = try await session.data(for: request)
+        try validateResponse(response)
+    }
+
+    func getAgents(isActive: Bool = true, limit: Int = 100) async throws -> [AIAgent] {
+        var components = URLComponents(url: baseURL.appendingPathComponent("api/ai-agents"), resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "is_active", value: String(isActive)),
+            URLQueryItem(name: "limit", value: String(limit))
+        ]
+
+        guard let url = components.url else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.setValue(getAuthorizationHeader(), forHTTPHeaderField: "Authorization")
+
+        let (data, response) = try await session.data(for: request)
+        try validateResponse(response)
+
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        decoder.dateDecodingStrategy = .iso8601
+
+        let agentsResponse = try decoder.decode(AIAgentsResponse.self, from: data)
+        return agentsResponse.agents
+    }
+
+    func getSimpleTasks(limit: Int = 100) async throws -> [SimpleTask] {
+        var components = URLComponents(url: baseURL.appendingPathComponent("api/tasks"), resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "limit", value: String(limit))
+        ]
+
+        guard let url = components.url else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.setValue(getAuthorizationHeader(), forHTTPHeaderField: "Authorization")
+
+        let (data, response) = try await session.data(for: request)
+        try validateResponse(response)
+
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        decoder.dateDecodingStrategy = .iso8601
+
+        let tasksResponse = try decoder.decode(SimpleTasksResponse.self, from: data)
+        return tasksResponse.tasks
+    }
+
     // MARK: - Helper Methods
 
     private func validateResponse(_ response: URLResponse) throws {

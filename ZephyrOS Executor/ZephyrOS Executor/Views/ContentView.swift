@@ -24,6 +24,8 @@ struct ContentView: View {
                     DashboardView()
                 case .tasks:
                     TaskQueueView()
+                case .aiTasks:
+                    AITasksView()
                 case .logs:
                     LogsView()
                 case .profile:
@@ -41,6 +43,7 @@ struct ContentView: View {
 enum SidebarItem: String, CaseIterable {
     case dashboard = "Dashboard"
     case tasks = "Tasks"
+    case aiTasks = "AI Tasks"
     case logs = "Logs"
     case profile = "Profile"
     case settings = "Settings"
@@ -49,6 +52,7 @@ enum SidebarItem: String, CaseIterable {
         switch self {
         case .dashboard: return "gauge.badge.plus"
         case .tasks: return "checklist"
+        case .aiTasks: return "sparkles"
         case .logs: return "list.bullet.rectangle"
         case .profile: return "person.circle.fill"
         case .settings: return "gearshape.fill"
