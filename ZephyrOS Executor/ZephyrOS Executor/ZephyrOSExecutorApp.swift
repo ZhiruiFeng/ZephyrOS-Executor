@@ -12,11 +12,22 @@ struct ZephyrOSExecutorApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var executorManager = ExecutorManager.shared
 
+    init() {
+        // Load environment variables from .env file
+        Environment.loadDotEnv()
+    }
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(executorManager)
-                .frame(minWidth: 900, minHeight: 600)
+            if executorManager.isAuthenticated {
+                ContentView()
+                    .environmentObject(executorManager)
+                    .frame(minWidth: 900, minHeight: 600)
+            } else {
+                LoginView(isAuthenticated: $executorManager.isAuthenticated)
+                    .environmentObject(executorManager)
+                    .frame(width: 500, height: 600)
+            }
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)

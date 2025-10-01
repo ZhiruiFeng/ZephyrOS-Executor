@@ -4,21 +4,40 @@ Local AI task execution engine that polls ZMemory for tasks and executes them us
 
 ## Quick Start
 
+📚 **[Complete Setup Guide →](SETUP_GUIDE.md)**
+
+### macOS App
+
 ```bash
-# macOS App
+# 1. Open in Xcode
 cd "ZephyrOS Executor"
 open "ZephyrOS Executor.xcodeproj"
-# Press ⌘R, configure in Settings, start from Dashboard
 
-# Python CLI
+# 2. Configure Google OAuth and environment variables
+# See SETUP_GUIDE.md for detailed instructions
+
+# 3. Build and Run (⌘R)
+```
+
+**First run:**
+1. Sign in with Google
+2. App connects to ZMemory using your OAuth token
+3. Start executor from Dashboard
+
+### Python CLI
+
+```bash
 pip install -r requirements.txt
 cp .env.example .env  # Add your API keys
 python main.py
 ```
 
+📖 **Need help?** See [SETUP_GUIDE.md](SETUP_GUIDE.md) for troubleshooting
+
 ## Features
 
 ### macOS Native App
+- ✅ **Google OAuth Login** - Sign in with your ZephyrOS account
 - ✅ SwiftUI interface with native macOS design
 - ✅ Dashboard with real-time status and statistics
 - ✅ Task queue browser (search, filter, details)
@@ -26,6 +45,7 @@ python main.py
 - ✅ Settings management with persistence
 - ✅ Menu bar integration with quick controls
 - ✅ Background operation support
+- ✅ User-specific task access via OAuth token
 
 ### Python CLI
 - ✅ Terminal interface with colored output

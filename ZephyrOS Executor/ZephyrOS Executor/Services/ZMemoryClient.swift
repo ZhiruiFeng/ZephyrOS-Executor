@@ -9,8 +9,9 @@ import Foundation
 
 class ZMemoryClient {
     private let baseURL: URL
-    private let apiKey: String
+    private var apiKey: String
     private let session: URLSession
+    private var oauthToken: String?
 
     init(baseURL: String, apiKey: String) {
         guard let url = URL(string: baseURL) else {
@@ -25,12 +26,26 @@ class ZMemoryClient {
         self.session = URLSession(configuration: config)
     }
 
+    // Set OAuth token for authenticated requests
+    func setOAuthToken(_ token: String) {
+        self.oauthToken = token
+    }
+
+    // Get authorization header value
+    private func getAuthorizationHeader() -> String {
+        // Prefer OAuth token if available, fallback to API key
+        if let oauthToken = oauthToken {
+            return "Bearer \(oauthToken)"
+        }
+        return "Bearer \(apiKey)"
+    }
+
     // MARK: - API Methods
 
     func testConnection() async throws -> Bool {
         let url = baseURL.appendingPathComponent("health")
         var request = URLRequest(url: url)
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue(getAuthorizationHeader(), forHTTPHeaderField: "Authorization")
 
         let (_, response) = try await session.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -48,7 +63,7 @@ class ZMemoryClient {
         }
 
         var request = URLRequest(url: url)
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue(getAuthorizationHeader(), forHTTPHeaderField: "Authorization")
 
         let (data, response) = try await session.data(for: request)
         try validateResponse(response)
@@ -65,7 +80,7 @@ class ZMemoryClient {
         let url = baseURL.appendingPathComponent("tasks/\(taskId)/accept")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue(getAuthorizationHeader(), forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         let body = ["agent": agentName]
@@ -79,7 +94,7 @@ class ZMemoryClient {
         let url = baseURL.appendingPathComponent("tasks/\(taskId)/status")
         var request = URLRequest(url: url)
         request.httpMethod = "PATCH"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue(getAuthorizationHeader(), forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         var body: [String: Any] = ["status": status.rawValue]
@@ -96,7 +111,7 @@ class ZMemoryClient {
         let url = baseURL.appendingPathComponent("tasks/\(taskId)/complete")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue(getAuthorizationHeader(), forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         let encoder = JSONEncoder()
@@ -114,7 +129,7 @@ class ZMemoryClient {
         let url = baseURL.appendingPathComponent("tasks/\(taskId)/fail")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue(getAuthorizationHeader(), forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         let body = ["error": error, "failed_at": ISO8601DateFormatter().string(from: Date())]

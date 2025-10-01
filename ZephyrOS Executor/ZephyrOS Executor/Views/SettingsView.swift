@@ -76,6 +76,24 @@ struct SettingsView: View {
                     }
                 }
 
+                // Account Section
+                SettingsSection(title: "Account", icon: "person.circle") {
+                    if executorManager.isAuthenticated {
+                        HStack {
+                            Text("Status: Signed in with Google")
+                                .foregroundColor(.green)
+                            Spacer()
+                            Button("Sign Out") {
+                                executorManager.signOut()
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                    } else {
+                        Text("Not signed in")
+                            .foregroundColor(.secondary)
+                    }
+                }
+
                 // Save button
                 HStack {
                     Spacer()

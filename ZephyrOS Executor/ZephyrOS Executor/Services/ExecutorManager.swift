@@ -17,6 +17,7 @@ class ExecutorManager: ObservableObject {
     @Published var statistics: ExecutorStatistics
     @Published var tasks: [Task] = []
     @Published var logs: [LogEntry] = []
+    @Published var isAuthenticated: Bool = false
 
     // MARK: - Configuration
     @Published var config: ExecutorConfig
@@ -106,6 +107,18 @@ class ExecutorManager: ObservableObject {
             stop()
             start()
         }
+    }
+
+    func setGoogleOAuthToken(_ token: String) {
+        zMemoryClient?.setOAuthToken(token)
+        isAuthenticated = true
+        addLog("Authenticated with Google OAuth", level: .info)
+    }
+
+    func signOut() {
+        isAuthenticated = false
+        stop()
+        addLog("Signed out", level: .info)
     }
 
     // MARK: - Private Methods
