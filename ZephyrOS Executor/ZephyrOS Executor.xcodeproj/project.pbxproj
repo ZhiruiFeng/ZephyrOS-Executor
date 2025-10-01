@@ -1,0 +1,558 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXContainerItemProxy section */
+		ACEE331B2E8CEDB3003179DA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = ACEE33022E8CEDB0003179DA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = ACEE33092E8CEDB0003179DA;
+			remoteInfo = "ZephyrOS Executor";
+		};
+		ACEE33252E8CEDB3003179DA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = ACEE33022E8CEDB0003179DA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = ACEE33092E8CEDB0003179DA;
+			remoteInfo = "ZephyrOS Executor";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		ACEE330A2E8CEDB0003179DA /* ZephyrOS Executor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ZephyrOS Executor.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		ACEE331A2E8CEDB3003179DA /* ZephyrOS ExecutorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ZephyrOS ExecutorTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		ACEE33242E8CEDB3003179DA /* ZephyrOS ExecutorUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ZephyrOS ExecutorUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		ACEE330C2E8CEDB0003179DA /* ZephyrOS Executor */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "ZephyrOS Executor";
+			sourceTree = "<group>";
+		};
+		ACEE331D2E8CEDB3003179DA /* ZephyrOS ExecutorTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "ZephyrOS ExecutorTests";
+			sourceTree = "<group>";
+		};
+		ACEE33272E8CEDB3003179DA /* ZephyrOS ExecutorUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "ZephyrOS ExecutorUITests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		ACEE33072E8CEDB0003179DA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ACEE33172E8CEDB3003179DA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ACEE33212E8CEDB3003179DA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		ACEE33012E8CEDB0003179DA = {
+			isa = PBXGroup;
+			children = (
+				ACEE330C2E8CEDB0003179DA /* ZephyrOS Executor */,
+				ACEE331D2E8CEDB3003179DA /* ZephyrOS ExecutorTests */,
+				ACEE33272E8CEDB3003179DA /* ZephyrOS ExecutorUITests */,
+				ACEE330B2E8CEDB0003179DA /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		ACEE330B2E8CEDB0003179DA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				ACEE330A2E8CEDB0003179DA /* ZephyrOS Executor.app */,
+				ACEE331A2E8CEDB3003179DA /* ZephyrOS ExecutorTests.xctest */,
+				ACEE33242E8CEDB3003179DA /* ZephyrOS ExecutorUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		ACEE33092E8CEDB0003179DA /* ZephyrOS Executor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ACEE332E2E8CEDB3003179DA /* Build configuration list for PBXNativeTarget "ZephyrOS Executor" */;
+			buildPhases = (
+				ACEE33062E8CEDB0003179DA /* Sources */,
+				ACEE33072E8CEDB0003179DA /* Frameworks */,
+				ACEE33082E8CEDB0003179DA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				ACEE330C2E8CEDB0003179DA /* ZephyrOS Executor */,
+			);
+			name = "ZephyrOS Executor";
+			packageProductDependencies = (
+			);
+			productName = "ZephyrOS Executor";
+			productReference = ACEE330A2E8CEDB0003179DA /* ZephyrOS Executor.app */;
+			productType = "com.apple.product-type.application";
+		};
+		ACEE33192E8CEDB3003179DA /* ZephyrOS ExecutorTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ACEE33312E8CEDB3003179DA /* Build configuration list for PBXNativeTarget "ZephyrOS ExecutorTests" */;
+			buildPhases = (
+				ACEE33162E8CEDB3003179DA /* Sources */,
+				ACEE33172E8CEDB3003179DA /* Frameworks */,
+				ACEE33182E8CEDB3003179DA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				ACEE331C2E8CEDB3003179DA /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				ACEE331D2E8CEDB3003179DA /* ZephyrOS ExecutorTests */,
+			);
+			name = "ZephyrOS ExecutorTests";
+			packageProductDependencies = (
+			);
+			productName = "ZephyrOS ExecutorTests";
+			productReference = ACEE331A2E8CEDB3003179DA /* ZephyrOS ExecutorTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		ACEE33232E8CEDB3003179DA /* ZephyrOS ExecutorUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ACEE33342E8CEDB3003179DA /* Build configuration list for PBXNativeTarget "ZephyrOS ExecutorUITests" */;
+			buildPhases = (
+				ACEE33202E8CEDB3003179DA /* Sources */,
+				ACEE33212E8CEDB3003179DA /* Frameworks */,
+				ACEE33222E8CEDB3003179DA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				ACEE33262E8CEDB3003179DA /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				ACEE33272E8CEDB3003179DA /* ZephyrOS ExecutorUITests */,
+			);
+			name = "ZephyrOS ExecutorUITests";
+			packageProductDependencies = (
+			);
+			productName = "ZephyrOS ExecutorUITests";
+			productReference = ACEE33242E8CEDB3003179DA /* ZephyrOS ExecutorUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		ACEE33022E8CEDB0003179DA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1640;
+				LastUpgradeCheck = 1640;
+				TargetAttributes = {
+					ACEE33092E8CEDB0003179DA = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					ACEE33192E8CEDB3003179DA = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = ACEE33092E8CEDB0003179DA;
+					};
+					ACEE33232E8CEDB3003179DA = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = ACEE33092E8CEDB0003179DA;
+					};
+				};
+			};
+			buildConfigurationList = ACEE33052E8CEDB0003179DA /* Build configuration list for PBXProject "ZephyrOS Executor" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = ACEE33012E8CEDB0003179DA;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = ACEE330B2E8CEDB0003179DA /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				ACEE33092E8CEDB0003179DA /* ZephyrOS Executor */,
+				ACEE33192E8CEDB3003179DA /* ZephyrOS ExecutorTests */,
+				ACEE33232E8CEDB3003179DA /* ZephyrOS ExecutorUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		ACEE33082E8CEDB0003179DA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ACEE33182E8CEDB3003179DA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ACEE33222E8CEDB3003179DA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		ACEE33062E8CEDB0003179DA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ACEE33162E8CEDB3003179DA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ACEE33202E8CEDB3003179DA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		ACEE331C2E8CEDB3003179DA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = ACEE33092E8CEDB0003179DA /* ZephyrOS Executor */;
+			targetProxy = ACEE331B2E8CEDB3003179DA /* PBXContainerItemProxy */;
+		};
+		ACEE33262E8CEDB3003179DA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = ACEE33092E8CEDB0003179DA /* ZephyrOS Executor */;
+			targetProxy = ACEE33252E8CEDB3003179DA /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		ACEE332C2E8CEDB3003179DA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 3D48Q78L63;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		ACEE332D2E8CEDB3003179DA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 3D48Q78L63;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		ACEE332F2E8CEDB3003179DA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "ZephyrOS Executor/ZephyrOS_Executor.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3D48Q78L63;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Zephyr.ZephyrOS-Executor";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		ACEE33302E8CEDB3003179DA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "ZephyrOS Executor/ZephyrOS_Executor.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3D48Q78L63;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Zephyr.ZephyrOS-Executor";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		ACEE33322E8CEDB3003179DA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3D48Q78L63;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Zephyr.ZephyrOS-ExecutorTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ZephyrOS Executor.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ZephyrOS Executor";
+			};
+			name = Debug;
+		};
+		ACEE33332E8CEDB3003179DA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3D48Q78L63;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Zephyr.ZephyrOS-ExecutorTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ZephyrOS Executor.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ZephyrOS Executor";
+			};
+			name = Release;
+		};
+		ACEE33352E8CEDB3003179DA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3D48Q78L63;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Zephyr.ZephyrOS-ExecutorUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "ZephyrOS Executor";
+			};
+			name = Debug;
+		};
+		ACEE33362E8CEDB3003179DA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3D48Q78L63;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Zephyr.ZephyrOS-ExecutorUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "ZephyrOS Executor";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		ACEE33052E8CEDB0003179DA /* Build configuration list for PBXProject "ZephyrOS Executor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ACEE332C2E8CEDB3003179DA /* Debug */,
+				ACEE332D2E8CEDB3003179DA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		ACEE332E2E8CEDB3003179DA /* Build configuration list for PBXNativeTarget "ZephyrOS Executor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ACEE332F2E8CEDB3003179DA /* Debug */,
+				ACEE33302E8CEDB3003179DA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		ACEE33312E8CEDB3003179DA /* Build configuration list for PBXNativeTarget "ZephyrOS ExecutorTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ACEE33322E8CEDB3003179DA /* Debug */,
+				ACEE33332E8CEDB3003179DA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		ACEE33342E8CEDB3003179DA /* Build configuration list for PBXNativeTarget "ZephyrOS ExecutorUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ACEE33352E8CEDB3003179DA /* Debug */,
+				ACEE33362E8CEDB3003179DA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = ACEE33022E8CEDB0003179DA /* Project object */;
+}
