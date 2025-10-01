@@ -114,7 +114,9 @@ class ExecutorManager: ObservableObject {
         if zMemoryClient == nil && !config.zMemoryAPIURL.isEmpty {
             zMemoryClient = ZMemoryClient(baseURL: config.zMemoryAPIURL, apiKey: config.zMemoryAPIKey)
         }
+
         zMemoryClient?.setOAuthToken(token)
+
         isAuthenticated = true
         addLog("Authenticated with Supabase", level: .info)
     }
@@ -134,22 +136,29 @@ class ExecutorManager: ObservableObject {
         do {
             let supabaseToken = try await exchangeGoogleTokenForSupabase(idToken: idToken)
             zMemoryClient?.setOAuthToken(supabaseToken)
-            isAuthenticated = true
-            addLog("Authenticated with Google ID token via Supabase", level: .info)
+
+            await MainActor.run {
+                isAuthenticated = true
+                addLog("Authenticated with Google ID token via Supabase", level: .info)
+            }
         } catch {
-            addLog("Failed to exchange Google token: \(error.localizedDescription)", level: .error)
-            isAuthenticated = false
+            await MainActor.run {
+                isAuthenticated = false
+                addLog("Failed to exchange Google token: \(error.localizedDescription)", level: .error)
+            }
         }
     }
 
     private func exchangeGoogleTokenForSupabase(idToken: String) async throws -> String {
         // Use Supabase's signInWithIdToken endpoint
         let supabaseURL = Environment.supabaseURL
+
         guard !supabaseURL.isEmpty else {
             throw APIError.invalidURL
         }
 
         let url = URL(string: "\(supabaseURL)/auth/v1/token?grant_type=id_token")!
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -163,8 +172,12 @@ class ExecutorManager: ObservableObject {
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw APIError.unauthorized
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            throw APIError.httpError(statusCode: httpResponse.statusCode)
         }
 
         struct SupabaseAuthResponse: Codable {
@@ -382,10 +395,22 @@ class ExecutorManager: ObservableObject {
 
     private func addLog(_ message: String, level: LogLevel) {
         let entry = LogEntry(timestamp: Date(), level: level, message: message)
-        logs.append(entry)
-        // Keep only last 1000 logs
-        if logs.count > 1000 {
-            logs.removeFirst(logs.count - 1000)
+
+        // Ensure UI updates happen on main thread
+        if Thread.isMainThread {
+            logs.append(entry)
+            // Keep only last 1000 logs
+            if logs.count > 1000 {
+                logs.removeFirst(logs.count - 1000)
+            }
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.logs.append(entry)
+                // Keep only last 1000 logs
+                if let self = self, self.logs.count > 1000 {
+                    self.logs.removeFirst(self.logs.count - 1000)
+                }
+            }
         }
     }
 }

@@ -7,6 +7,7 @@ import requests
 from typing import List, Dict, Optional, Any
 from datetime import datetime
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -14,21 +15,38 @@ logger = logging.getLogger(__name__)
 class ZMemoryClient:
     """Client for interacting with ZMemory API."""
 
-    def __init__(self, api_url: str, api_key: str):
+    def __init__(self, api_url: str, auth_manager=None):
         """
         Initialize ZMemory client.
 
         Args:
             api_url: Base URL for ZMemory API
-            api_key: API key for authentication
+            auth_manager: Optional AuthTokenManager instance for authentication
         """
         self.api_url = api_url.rstrip('/')
-        self.api_key = api_key
+        self.auth_manager = auth_manager
         self.session = requests.Session()
         self.session.headers.update({
-            'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json'
         })
+
+    async def _get_auth_headers(self) -> Dict[str, str]:
+        """Get current authentication headers."""
+        if self.auth_manager:
+            return await self.auth_manager.get_auth_headers()
+        return {}
+
+    def _make_request(self, method: str, url: str, **kwargs) -> requests.Response:
+        """Make authenticated HTTP request."""
+        # Get auth headers synchronously
+        headers = asyncio.run(self._get_auth_headers())
+
+        # Merge with any existing headers
+        if 'headers' in kwargs:
+            headers.update(kwargs['headers'])
+        kwargs['headers'] = headers
+
+        return self.session.request(method, url, **kwargs)
 
     def test_connection(self) -> bool:
         """
@@ -38,7 +56,7 @@ class ZMemoryClient:
             True if connection successful, False otherwise
         """
         try:
-            response = self.session.get(f'{self.api_url}/health')
+            response = self._make_request('GET', f'{self.api_url}/health')
             return response.status_code == 200
         except Exception as e:
             logger.error(f"Connection test failed: {e}")
@@ -55,7 +73,8 @@ class ZMemoryClient:
             List of pending task objects
         """
         try:
-            response = self.session.get(
+            response = self._make_request(
+                'GET',
                 f'{self.api_url}/tasks/pending',
                 params={'agent': agent_name}
             )
@@ -77,7 +96,8 @@ class ZMemoryClient:
             True if task accepted successfully
         """
         try:
-            response = self.session.post(
+            response = self._make_request(
+                'POST',
                 f'{self.api_url}/tasks/{task_id}/accept',
                 json={'agent': agent_name}
             )
@@ -105,7 +125,8 @@ class ZMemoryClient:
             if progress is not None:
                 data['progress'] = progress
 
-            response = self.session.patch(
+            response = self._make_request(
+                'PATCH',
                 f'{self.api_url}/tasks/{task_id}/status',
                 json=data
             )
@@ -128,7 +149,8 @@ class ZMemoryClient:
             True if completion successful
         """
         try:
-            response = self.session.post(
+            response = self._make_request(
+                'POST',
                 f'{self.api_url}/tasks/{task_id}/complete',
                 json={
                     'result': result,
@@ -154,7 +176,8 @@ class ZMemoryClient:
             True if update successful
         """
         try:
-            response = self.session.post(
+            response = self._make_request(
+                'POST',
                 f'{self.api_url}/tasks/{task_id}/fail',
                 json={
                     'error': error,
@@ -181,7 +204,8 @@ class ZMemoryClient:
             True if upload successful
         """
         try:
-            response = self.session.post(
+            response = self._make_request(
+                'POST',
                 f'{self.api_url}/tasks/{task_id}/artifacts',
                 json={
                     'name': artifact_name,

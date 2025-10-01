@@ -13,6 +13,38 @@ class ZMemoryClient {
     private let session: URLSession
     private var oauthToken: String?
 
+    private static let iso8601FractionalFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withDashSeparatorInDate, .withColonSeparatorInTime, .withFractionalSeconds]
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter
+    }()
+
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withDashSeparatorInDate, .withColonSeparatorInTime]
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter
+    }()
+
+    private static let supabaseTimestampFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }()
+
+    private static let supabaseSimpleTimestampFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }()
+
     init(baseURL: String, apiKey: String) {
         guard let url = URL(string: baseURL) else {
             fatalError("Invalid ZMemory API URL: \(baseURL)")
@@ -24,6 +56,33 @@ class ZMemoryClient {
         config.timeoutIntervalForRequest = 30
         config.timeoutIntervalForResource = 300
         self.session = URLSession(configuration: config)
+    }
+
+    private func makeDecoder() -> JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let string = try container.decode(String.self)
+
+            if let date = ZMemoryClient.iso8601FractionalFormatter.date(from: string) {
+                return date
+            }
+
+            if let date = ZMemoryClient.iso8601Formatter.date(from: string) {
+                return date
+            }
+
+            if let date = ZMemoryClient.supabaseTimestampFormatter.date(from: string) {
+                return date
+            }
+
+            if let date = ZMemoryClient.supabaseSimpleTimestampFormatter.date(from: string) {
+                return date
+            }
+
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Expected date string in ISO8601 format, received: \(string)")
+        }
+        return decoder
     }
 
     // Set OAuth token for authenticated requests
@@ -68,9 +127,7 @@ class ZMemoryClient {
         let (data, response) = try await session.data(for: request)
         try validateResponse(response)
 
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = makeDecoder()
 
         let taskResponse = try decoder.decode(TasksResponse.self, from: data)
         return taskResponse.tasks
@@ -162,27 +219,23 @@ class ZMemoryClient {
         }
 
         var request = URLRequest(url: url)
-        request.setValue(getAuthorizationHeader(), forHTTPHeaderField: "Authorization")
 
-        // Debug logging
-        print("🔍 AI Tasks Request URL: \(url)")
-        print("🔍 Has OAuth Token: \(oauthToken != nil)")
-        print("🔍 Auth Header: \(getAuthorizationHeader().prefix(20))...")
+        let authHeader = getAuthorizationHeader()
+        request.setValue(authHeader, forHTTPHeaderField: "Authorization")
 
         let (data, response) = try await session.data(for: request)
 
-        if let httpResponse = response as? HTTPURLResponse {
-            print("🔍 AI Tasks Response Status: \(httpResponse.statusCode)")
-        }
-
         try validateResponse(response)
 
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = makeDecoder()
+        // Don't use convertFromSnakeCase because we have explicit CodingKeys
 
-        let taskResponse = try decoder.decode(AITasksResponse.self, from: data)
-        return taskResponse.aiTasks
+        do {
+            let taskResponse = try decoder.decode(AITasksResponse.self, from: data)
+            return taskResponse.aiTasks
+        } catch {
+            throw APIError.decodingError(error)
+        }
     }
 
     func getAITask(id: String) async throws -> AITask {
@@ -193,9 +246,7 @@ class ZMemoryClient {
         let (data, response) = try await session.data(for: request)
         try validateResponse(response)
 
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = makeDecoder()
 
         struct Response: Codable {
             let aiTask: AITask
@@ -239,9 +290,7 @@ class ZMemoryClient {
         let (data, response) = try await session.data(for: request)
         try validateResponse(response)
 
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = makeDecoder()
 
         let agentsResponse = try decoder.decode(AIAgentsResponse.self, from: data)
         return agentsResponse.agents
@@ -263,9 +312,7 @@ class ZMemoryClient {
         let (data, response) = try await session.data(for: request)
         try validateResponse(response)
 
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = makeDecoder()
 
         let tasksResponse = try decoder.decode(SimpleTasksResponse.self, from: data)
         return tasksResponse.tasks

@@ -13,6 +13,7 @@ from queue import Queue, Empty
 from zmemory_client import ZMemoryClient
 from claude_client import ClaudeClient
 from config import ExecutorConfig
+from auth_manager import AuthTokenManager
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,8 @@ class TaskExecutor:
             config: Executor configuration
         """
         self.config = config
-        self.zmemory = ZMemoryClient(config.zmemory_api_url, config.zmemory_api_key)
+        self.auth_manager = AuthTokenManager(config.supabase_url, config.supabase_anon_key)
+        self.zmemory = ZMemoryClient(config.zmemory_api_url, auth_manager=self.auth_manager)
         self.claude = ClaudeClient(config.anthropic_api_key, config.claude_model)
 
         self.running = False

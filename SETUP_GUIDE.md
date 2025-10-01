@@ -73,6 +73,20 @@ open "ZephyrOS Executor.xcodeproj"
 
 ## Xcode Configuration
 
+### 0. Create a Personal (Unshared) Scheme
+
+To keep secrets out of source control, duplicate the shared scheme and store
+your credentials in a personal copy:
+
+1. In Xcode, choose **Product → Scheme → Manage Schemes…**
+2. Select `ZephyrOS Executor` and click **Duplicate**
+3. Name it something like `ZephyrOS Executor (YourName)`
+4. **Uncheck** the **Shared** checkbox for the new scheme
+5. Click **Close**
+
+Xcode saves unshared schemes under `xcuserdata`, which is already ignored by Git.
+Use this personal scheme whenever you edit environment variables.
+
 ### 1. Configure URL Scheme
 
 The app needs to handle OAuth callbacks via a custom URL scheme.
@@ -100,11 +114,11 @@ Your app should launch!
 
 ### 2. Set Environment Variables in Xcode
 
-Setting environment variables in Xcode scheme is the most reliable method:
+Set environment variables on the personal scheme you just created:
 
 **Steps:**
 
-1. Click scheme dropdown → Select "ZephyrOS Executor" → **"Edit Scheme..."**
+1. Click the scheme dropdown → Select your personal scheme → **"Edit Scheme..."**
 2. Left sidebar: **Run** → Top tabs: **Arguments**
 3. Find **Environment Variables** section
 4. Click **+** to add each variable:
@@ -125,12 +139,12 @@ Setting environment variables in Xcode scheme is the most reliable method:
 
 ## Environment Variables
 
-### Option 1: Xcode Scheme (Recommended)
+### Option 1: Personal Xcode Scheme (Recommended)
 
 See [Xcode Configuration](#2-set-environment-variables-in-xcode) above.
 
-✅ **Pros**: Most reliable, immediate, no file searching
-❌ **Cons**: Need to set for each scheme
+✅ **Pros**: Most reliable, immediate, no file searching, stays local
+❌ **Cons**: Need to set for each developer
 
 ### Option 2: .env File
 

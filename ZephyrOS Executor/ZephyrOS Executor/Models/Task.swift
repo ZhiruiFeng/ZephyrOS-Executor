@@ -18,8 +18,10 @@ enum TaskStatus: String, Codable {
 
 enum TaskPriority: String, Codable {
     case low
+    case medium
     case normal
     case high
+    case urgent
 }
 
 struct Task: Identifiable, Codable, Equatable {

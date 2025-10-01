@@ -5,11 +5,13 @@ CLI interface for ZephyrOS Executor.
 import sys
 import time
 import signal
+import asyncio
 from typing import Optional
 from colorama import init, Fore, Style
 
 from config import ExecutorConfig
 from executor import TaskExecutor
+from auth_manager import AuthTokenManager
 
 # Initialize colorama for cross-platform colored output
 init()
@@ -146,8 +148,117 @@ class ExecutorCLI:
             self.print_status("Executor stopped", "success")
 
 
+def login():
+    """Login command to authenticate with Google OAuth."""
+    print(f"{Fore.CYAN}╔═══════════════════════════════════════════════════════╗")
+    print(f"║     {Fore.WHITE}ZephyrOS Executor - Google Login{Fore.CYAN}           ║")
+    print(f"╚═══════════════════════════════════════════════════════╝{Style.RESET_ALL}\n")
+
+    try:
+        # Load config
+        config = ExecutorConfig.from_env()
+        auth_manager = AuthTokenManager(config.supabase_url, config.supabase_anon_key)
+
+        # Check if user wants to provide a token directly
+        if len(sys.argv) > 2 and sys.argv[2] == '--token':
+            if len(sys.argv) < 4:
+                print(f"{Fore.RED}Error: --token requires an access token argument{Style.RESET_ALL}")
+                return 1
+
+            access_token = sys.argv[3]
+            print(f"{Fore.CYAN}Setting session from provided token...{Style.RESET_ALL}")
+
+            if auth_manager.set_session_from_token(access_token):
+                print(f"{Fore.GREEN}✓ Login successful!{Style.RESET_ALL}\n")
+
+                # Get user info
+                user_info = auth_manager.get_user_info()
+                if user_info:
+                    print(f"Logged in as: {user_info.get('email', 'unknown')}")
+                    print(f"User ID: {user_info.get('id', 'unknown')}\n")
+
+                return 0
+            else:
+                print(f"{Fore.RED}✗ Login failed{Style.RESET_ALL}")
+                return 1
+        else:
+            # OAuth flow
+            print(f"{Fore.YELLOW}Starting Google OAuth login...{Style.RESET_ALL}\n")
+            asyncio.run(auth_manager.login_with_google_oauth())
+            print(f"\n{Fore.CYAN}After completing authentication in your browser:{Style.RESET_ALL}")
+            print(f"1. Copy the access_token from the callback URL")
+            print(f"2. Run: {Fore.WHITE}python -m src.cli login --token <your_token>{Style.RESET_ALL}\n")
+            return 0
+
+    except Exception as e:
+        print(f"{Fore.RED}Error: {e}{Style.RESET_ALL}")
+        return 1
+
+
+def logout():
+    """Logout command to clear authentication."""
+    print(f"{Fore.CYAN}Logging out...{Style.RESET_ALL}")
+
+    try:
+        config = ExecutorConfig.from_env()
+        auth_manager = AuthTokenManager(config.supabase_url, config.supabase_anon_key)
+        auth_manager.logout()
+        print(f"{Fore.GREEN}✓ Logged out successfully{Style.RESET_ALL}")
+        return 0
+    except Exception as e:
+        print(f"{Fore.RED}Error: {e}{Style.RESET_ALL}")
+        return 1
+
+
+def whoami():
+    """Show current authenticated user."""
+    try:
+        config = ExecutorConfig.from_env()
+        auth_manager = AuthTokenManager(config.supabase_url, config.supabase_anon_key)
+
+        user_info = auth_manager.get_user_info()
+        if user_info:
+            print(f"\n{Fore.GREEN}Authenticated as:{Style.RESET_ALL}")
+            print(f"  Email: {user_info.get('email', 'unknown')}")
+            print(f"  User ID: {user_info.get('id', 'unknown')}")
+            print(f"  Provider: {user_info.get('provider', 'unknown')}\n")
+            return 0
+        else:
+            print(f"{Fore.YELLOW}Not logged in{Style.RESET_ALL}")
+            print(f"Run: {Fore.WHITE}python -m src.cli login{Style.RESET_ALL}\n")
+            return 1
+    except Exception as e:
+        print(f"{Fore.RED}Error: {e}{Style.RESET_ALL}")
+        return 1
+
+
 def main():
     """Main entry point for the CLI."""
+    # Check for subcommands
+    if len(sys.argv) > 1:
+        command = sys.argv[1]
+        if command == 'login':
+            sys.exit(login())
+        elif command == 'logout':
+            sys.exit(logout())
+        elif command == 'whoami':
+            sys.exit(whoami())
+        elif command in ['--help', '-h', 'help']:
+            print(f"\n{Fore.CYAN}ZephyrOS Executor CLI{Style.RESET_ALL}\n")
+            print("Commands:")
+            print(f"  {Fore.WHITE}python -m src.cli{Style.RESET_ALL}                    - Run the executor")
+            print(f"  {Fore.WHITE}python -m src.cli login{Style.RESET_ALL}              - Login with Google OAuth")
+            print(f"  {Fore.WHITE}python -m src.cli login --token <token>{Style.RESET_ALL} - Login with access token")
+            print(f"  {Fore.WHITE}python -m src.cli logout{Style.RESET_ALL}             - Logout")
+            print(f"  {Fore.WHITE}python -m src.cli whoami{Style.RESET_ALL}             - Show current user")
+            print()
+            return 0
+        else:
+            print(f"{Fore.RED}Unknown command: {command}{Style.RESET_ALL}")
+            print(f"Run '{Fore.WHITE}python -m src.cli --help{Style.RESET_ALL}' for usage")
+            return 1
+
+    # No command - run executor
     cli = ExecutorCLI()
     sys.exit(cli.run())
 

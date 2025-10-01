@@ -13,7 +13,7 @@ Local AI task execution engine that polls ZMemory for tasks and executes them us
 cd "ZephyrOS Executor"
 open "ZephyrOS Executor.xcodeproj"
 
-# 2. Configure Google OAuth and environment variables
+# 2. Create a personal (unshared) scheme and add your env vars
 # See SETUP_GUIDE.md for detailed instructions
 
 # 3. Build and Run (⌘R)
@@ -118,7 +118,8 @@ ZephyrOS-Executor/
 ## Configuration
 
 ### macOS App
-Configure via Settings tab in the app:
+Configure secrets via a personal (unshared) Xcode scheme or local `.env`, then
+manage runtime options in the app’s Settings tab:
 - ZMemory API URL and key
 - Anthropic API key
 - Agent name and parameters

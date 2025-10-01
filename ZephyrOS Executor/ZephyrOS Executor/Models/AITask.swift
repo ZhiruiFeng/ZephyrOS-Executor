@@ -191,6 +191,49 @@ struct AITaskExecutionResult: Codable, Equatable {
     var artifacts: [String]?
     var logs: String?
     var error: String?
+
+    enum CodingKeys: String, CodingKey {
+        case output
+        case artifacts
+        case logs
+        case error
+    }
+
+    init(output: String? = nil, artifacts: [String]? = nil, logs: String? = nil, error: String? = nil) {
+        self.output = output
+        self.artifacts = artifacts
+        self.logs = logs
+        self.error = error
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        output = try container.decodeIfPresent(String.self, forKey: .output)
+
+        if let artifacts = try? container.decodeIfPresent([String].self, forKey: .artifacts) {
+            self.artifacts = artifacts
+        } else {
+            self.artifacts = nil
+        }
+
+        if let logsString = try? container.decodeIfPresent(String.self, forKey: .logs) {
+            logs = logsString
+        } else if let logsArray = try? container.decodeIfPresent([String].self, forKey: .logs) {
+            logs = logsArray.joined(separator: "\n")
+        } else {
+            logs = nil
+        }
+
+        error = try container.decodeIfPresent(String.self, forKey: .error)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(output, forKey: .output)
+        try container.encodeIfPresent(artifacts, forKey: .artifacts)
+        try container.encodeIfPresent(logs, forKey: .logs)
+        try container.encodeIfPresent(error, forKey: .error)
+    }
 }
 
 // Agent info for display

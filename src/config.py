@@ -17,7 +17,10 @@ class ExecutorConfig:
 
     # ZMemory API settings
     zmemory_api_url: str
-    zmemory_api_key: str
+
+    # Supabase settings (for authentication)
+    supabase_url: str
+    supabase_anon_key: str
 
     # Anthropic Claude API settings
     anthropic_api_key: str
@@ -44,15 +47,18 @@ class ExecutorConfig:
             ValueError: If required environment variables are missing
         """
         zmemory_api_url = os.getenv("ZMEMORY_API_URL")
-        zmemory_api_key = os.getenv("ZMEMORY_API_KEY")
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_anon_key = os.getenv("SUPABASE_ANON_KEY")
         anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
 
         # Check required variables
         missing = []
         if not zmemory_api_url:
             missing.append("ZMEMORY_API_URL")
-        if not zmemory_api_key:
-            missing.append("ZMEMORY_API_KEY")
+        if not supabase_url:
+            missing.append("SUPABASE_URL")
+        if not supabase_anon_key:
+            missing.append("SUPABASE_ANON_KEY")
         if not anthropic_api_key:
             missing.append("ANTHROPIC_API_KEY")
 
@@ -64,7 +70,8 @@ class ExecutorConfig:
 
         return cls(
             zmemory_api_url=zmemory_api_url,
-            zmemory_api_key=zmemory_api_key,
+            supabase_url=supabase_url,
+            supabase_anon_key=supabase_anon_key,
             anthropic_api_key=anthropic_api_key,
             claude_model=os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514"),
             agent_name=os.getenv("AGENT_NAME", "zephyr-executor-1"),

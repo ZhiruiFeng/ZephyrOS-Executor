@@ -129,11 +129,23 @@ struct AITasksView: View {
                 return
             }
 
-            async let tasksLoad = zmemoryClient.getAITasks()
-            async let agentsLoad = zmemoryClient.getAgents()
-            async let simpleTasksLoad = zmemoryClient.getSimpleTasks()
+            let loadedTasks = try await zmemoryClient.getAITasks()
 
-            let (loadedTasks, loadedAgents, loadedSimpleTasks) = try await (tasksLoad, agentsLoad, simpleTasksLoad)
+            let loadedAgents: [AIAgent]
+            do {
+                loadedAgents = try await zmemoryClient.getAgents()
+            } catch {
+                print("🔍 Warning: Failed to load AI agents: \(error)")
+                loadedAgents = []
+            }
+
+            let loadedSimpleTasks: [SimpleTask]
+            do {
+                loadedSimpleTasks = try await zmemoryClient.getSimpleTasks()
+            } catch {
+                print("🔍 Warning: Failed to load simple tasks: \(error)")
+                loadedSimpleTasks = []
+            }
 
             aiTasks = loadedTasks
             agents = loadedAgents
@@ -578,8 +590,10 @@ struct PriorityBadge: View {
     var priorityColor: Color {
         switch priority {
         case .low: return .gray
+        case .medium: return .blue
         case .normal: return .blue
         case .high: return .orange
+        case .urgent: return .red
         }
     }
 

@@ -136,7 +136,6 @@ class SupabaseAuthService: NSObject, ObservableObject {
             UserDefaults.standard.set(refreshToken, forKey: "supabase_refresh_token")
         }
 
-        // Fetch user info from Supabase using the JWT token
         try await fetchUserInfo(token: accessToken)
 
         isAuthenticated = true

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LoginView: View {
-    @StateObject private var authService = GoogleAuthService()
+    @StateObject private var supabaseAuthService = SupabaseAuthService()
     @EnvironmentObject var executorManager: ExecutorManager
     @State private var isLoading = false
     @State private var errorMessage: String?
@@ -84,20 +84,20 @@ struct LoginView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(NSColor.windowBackgroundColor))
-        .onChange(of: authService.isAuthenticated) { _, newValue in
-            if newValue, let idToken = authService.idToken {
-                // Exchange Google ID token for Supabase session
-                _Concurrency.Task {
-                    await executorManager.signInWithGoogleToken(idToken)
+        .onChange(of: supabaseAuthService.isAuthenticated) { _, newValue in
+            if newValue, let accessToken = supabaseAuthService.accessToken {
+                // Use Supabase access token directly
+                _Concurrency.Task { @MainActor in
+                    executorManager.setSupabaseToken(accessToken)
                     isAuthenticated = executorManager.isAuthenticated
                 }
             }
         }
         .onAppear {
-            authService.restoreSession()
-            if authService.isAuthenticated, let idToken = authService.idToken {
-                _Concurrency.Task {
-                    await executorManager.signInWithGoogleToken(idToken)
+            supabaseAuthService.restoreSession()
+            if supabaseAuthService.isAuthenticated, let accessToken = supabaseAuthService.accessToken {
+                _Concurrency.Task { @MainActor in
+                    executorManager.setSupabaseToken(accessToken)
                     isAuthenticated = executorManager.isAuthenticated
                 }
             }
@@ -108,10 +108,10 @@ struct LoginView: View {
         isLoading = true
         errorMessage = nil
 
-        _Concurrency.Task {
+        _Concurrency.Task { @MainActor in
             do {
-                try await authService.signIn()
-                isAuthenticated = true
+                try await supabaseAuthService.signIn()
+                // isAuthenticated will be set by onChange
             } catch {
                 errorMessage = error.localizedDescription
             }
