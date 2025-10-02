@@ -27,7 +27,7 @@ struct ContentView: View {
                 case .aiTasks:
                     AITasksView()
                 case .executor:
-                    ExecutorConfigurationView()
+                    WorkspaceManagementView()
                 case .logs:
                     LogsView()
                 case .profile:

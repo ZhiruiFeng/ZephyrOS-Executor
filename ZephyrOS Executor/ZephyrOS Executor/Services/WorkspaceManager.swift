@@ -159,6 +159,89 @@ class WorkspaceManager: ObservableObject {
 
     // MARK: - Workspace Lifecycle
 
+    /// Create a new workspace with custom parameters
+    func createWorkspace(
+        agentId: String,
+        workspacePath: String? = nil,
+        projectName: String? = nil,
+        projectType: String? = nil,
+        repoUrl: String? = nil,
+        branch: String = "main",
+        systemPrompt: String? = nil,
+        allowedCommands: [String]? = nil,
+        environmentVars: [String: String]? = nil,
+        executionTimeoutMinutes: Int = 60,
+        maxDiskUsageMb: Int = 10240,
+        enableNetwork: Bool = true,
+        enableGit: Bool = true
+    ) async throws -> ExecutorWorkspace {
+        guard let client = client else {
+            throw WorkspaceError.clientNotAvailable
+        }
+
+        let device = try await ensureDeviceRegistered()
+
+        // Check capacity
+        if device.availableSlots <= 0 {
+            throw WorkspaceError.noAvailableSlots
+        }
+
+        // Use provided path or generate one
+        let finalWorkspacePath = workspacePath ?? generateWorkspacePath(device: device, taskId: UUID().uuidString)
+
+        // Create workspace directory structure locally first
+        try createDirectoryIfNeeded(at: finalWorkspacePath)
+
+        // Create workspace
+        let workspace = ExecutorWorkspace(
+            id: UUID().uuidString,
+            executorDeviceId: device.id,
+            agentId: agentId,
+            userId: "",
+            workspacePath: finalWorkspacePath,
+            relativePath: finalWorkspacePath.replacingOccurrences(of: device.rootWorkspacePath, with: ""),
+            metadataPath: nil,
+            repoUrl: repoUrl,
+            repoBranch: branch,
+            projectType: projectType,
+            projectName: projectName ?? "Agent Workspace",
+            allowedCommands: allowedCommands,
+            environmentVars: environmentVars,
+            systemPrompt: systemPrompt,
+            executionTimeoutMinutes: executionTimeoutMinutes,
+            enableNetwork: enableNetwork,
+            enableGit: enableGit,
+            maxDiskUsageMb: maxDiskUsageMb,
+            status: .creating,
+            progressPercentage: 0,
+            currentPhase: "Creating workspace",
+            currentStep: nil,
+            lastHeartbeatAt: nil,
+            diskUsageBytes: 0,
+            fileCount: 0,
+            createdAt: Date(),
+            initializedAt: nil,
+            readyAt: nil,
+            archivedAt: nil,
+            updatedAt: Date()
+        )
+
+        await MainActor.run {
+            activeWorkspaces.append(workspace)
+        }
+
+        // Setup directories asynchronously
+        _Concurrency.Task {
+            do {
+                try await setupWorkspaceDirectories(workspace: workspace)
+            } catch {
+                try? await updateWorkspaceStatus(id: workspace.id, status: .failed, error: error.localizedDescription)
+            }
+        }
+
+        return workspace
+    }
+
     /// Create a new workspace for a task
     func createWorkspace(for task: AITask, agent: AIAgent? = nil) async throws -> ExecutorWorkspace {
         guard let client = client else {
