@@ -260,6 +260,115 @@ struct SimpleTask: Identifiable, Codable {
     let id: String
     let title: String
     let status: String
+    let priority: String?
+    let category: String?
+    let progress: Double?
+    let parentTaskId: String?
+    let type: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case status
+        case priority
+        case category
+        case progress
+        case parentTaskId = "parent_task_id"
+        case type
+        case content
+    }
+
+    enum ContentKeys: String, CodingKey {
+        case title
+        case status
+        case priority
+        case category
+        case progress
+        case parentTaskId = "parent_task_id"
+    }
+
+    init(id: String,
+         title: String,
+         status: String,
+         priority: String? = nil,
+         category: String? = nil,
+         progress: Double? = nil,
+         parentTaskId: String? = nil,
+         type: String? = nil) {
+        self.id = id
+        self.title = title
+        self.status = status
+        self.priority = priority
+        self.category = category
+        self.progress = progress
+        self.parentTaskId = parentTaskId
+        self.type = type
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        let id = try container.decode(String.self, forKey: .id)
+        let type = try container.decodeIfPresent(String.self, forKey: .type)
+
+        var title: String
+        var status: String?
+        var priority: String?
+        var category: String?
+        var progress: Double?
+        var parentTaskId: String?
+
+        if container.contains(.content) {
+            let content = try container.nestedContainer(keyedBy: ContentKeys.self, forKey: .content)
+            title = try content.decode(String.self, forKey: .title)
+            status = try content.decodeIfPresent(String.self, forKey: .status)
+            priority = try content.decodeIfPresent(String.self, forKey: .priority)
+            category = try content.decodeIfPresent(String.self, forKey: .category)
+            progress = try Self.decodeProgress(from: content, forKey: .progress)
+            parentTaskId = try content.decodeIfPresent(String.self, forKey: .parentTaskId)
+        } else {
+            title = try container.decode(String.self, forKey: .title)
+            status = try container.decodeIfPresent(String.self, forKey: .status)
+            priority = try container.decodeIfPresent(String.self, forKey: .priority)
+            category = try container.decodeIfPresent(String.self, forKey: .category)
+            progress = try Self.decodeProgress(from: container, forKey: .progress)
+            parentTaskId = try container.decodeIfPresent(String.self, forKey: .parentTaskId)
+        }
+
+        self.id = id
+        self.title = title
+        self.status = status ?? "pending"
+        self.priority = priority
+        self.category = category
+        self.progress = progress
+        self.parentTaskId = parentTaskId
+        self.type = type
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encode(status, forKey: .status)
+        try container.encodeIfPresent(priority, forKey: .priority)
+        try container.encodeIfPresent(category, forKey: .category)
+        try container.encodeIfPresent(progress, forKey: .progress)
+        try container.encodeIfPresent(parentTaskId, forKey: .parentTaskId)
+        try container.encodeIfPresent(type, forKey: .type)
+    }
+
+    private static func decodeProgress<Keys: CodingKey>(from container: KeyedDecodingContainer<Keys>,
+                                                        forKey key: Keys) throws -> Double? {
+        if let value = try container.decodeIfPresent(Double.self, forKey: key) {
+            return value
+        }
+
+        if let intValue = try container.decodeIfPresent(Int.self, forKey: key) {
+            return Double(intValue)
+        }
+
+        return nil
+    }
 }
 
 // API Response wrappers

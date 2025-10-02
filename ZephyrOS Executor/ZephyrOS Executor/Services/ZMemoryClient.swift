@@ -314,8 +314,27 @@ class ZMemoryClient {
 
         let decoder = makeDecoder()
 
-        let tasksResponse = try decoder.decode(SimpleTasksResponse.self, from: data)
-        return tasksResponse.tasks
+        // Debug: Print raw response
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("📋 Simple Tasks Response: \(jsonString.prefix(200))")
+        }
+
+        // Try to decode as array first (direct response), then as wrapped response
+        do {
+            let tasks = try decoder.decode([SimpleTask].self, from: data)
+            print("✅ Decoded as array: \(tasks.count) tasks")
+            return tasks
+        } catch let arrayError {
+            print("⚠️ Failed to decode as array: \(arrayError)")
+            do {
+                let tasksResponse = try decoder.decode(SimpleTasksResponse.self, from: data)
+                print("✅ Decoded as wrapped response: \(tasksResponse.tasks.count) tasks")
+                return tasksResponse.tasks
+            } catch let wrappedError {
+                print("❌ Failed to decode as wrapped response: \(wrappedError)")
+                throw wrappedError
+            }
+        }
     }
 
     // MARK: - Helper Methods

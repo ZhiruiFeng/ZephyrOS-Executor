@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		AC6F800D2E8E5FF20022EBDE /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = AC6F800C2E8E5FF20022EBDE /* SwiftTerm */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		ACEE331B2E8CEDB3003179DA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AC6F800D2E8E5FF20022EBDE /* SwiftTerm in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +117,7 @@
 			);
 			name = "ZephyrOS Executor";
 			packageProductDependencies = (
+				AC6F800C2E8E5FF20022EBDE /* SwiftTerm */,
 			);
 			productName = "ZephyrOS Executor";
 			productReference = ACEE330A2E8CEDB0003179DA /* ZephyrOS Executor.app */;
@@ -195,6 +201,9 @@
 			);
 			mainGroup = ACEE33012E8CEDB0003179DA;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				AC6F800B2E8E5FF20022EBDE /* XCRemoteSwiftPackageReference "SwiftTerm" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = ACEE330B2E8CEDB0003179DA /* Products */;
 			projectDirPath = "";
@@ -553,6 +562,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AC6F800B2E8E5FF20022EBDE /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/migueldeicaza/SwiftTerm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AC6F800C2E8E5FF20022EBDE /* SwiftTerm */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AC6F800B2E8E5FF20022EBDE /* XCRemoteSwiftPackageReference "SwiftTerm" */;
+			productName = SwiftTerm;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = ACEE33022E8CEDB0003179DA /* Project object */;
 }
