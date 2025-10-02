@@ -37,11 +37,13 @@ class PTYTerminalController: ObservableObject {
     /// - Parameters:
     ///   - frame: Initial frame for the terminal view
     ///   - shellPath: Path to shell executable (defaults to /bin/zsh)
+    ///   - workingDirectory: Initial working directory for the shell (defaults to user home)
     ///   - initialCommand: Optional command to run on startup
     /// - Returns: The configured LocalProcessTerminalView
     func createTerminal(
         frame: CGRect = CGRect(x: 0, y: 0, width: 800, height: 600),
         shellPath: String = "/bin/zsh",
+        workingDirectory: String? = nil,
         initialCommand: String? = nil
     ) -> LocalProcessTerminalView {
 
@@ -55,39 +57,55 @@ class PTYTerminalController: ObservableObject {
         self.terminalView = terminal
 
         do {
+            // Prepare environment with working directory if specified
+            var environment: [String]? = nil
+            if let workDir = workingDirectory {
+                // Get default environment and add PWD
+                var env = ProcessInfo.processInfo.environment
+                env["PWD"] = workDir
+                environment = env.map { "\($0.key)=\($0.value)" }
+            }
+
             // Start the shell process with PTY as an interactive shell
             // This creates a pseudo-terminal and connects the shell to it
-            // Using nil for environment will use Terminal.getEnvironmentVariables defaults
             if shellPath.contains("zsh") {
                 // Start zsh as login interactive shell
                 try terminal.startProcess(
                     executable: shellPath,
                     args: ["-l", "-i"],
-                    environment: nil  // Use defaults which includes PATH, HOME, etc.
+                    environment: environment
                 )
             } else if shellPath.contains("bash") {
                 // Start bash as login interactive shell
                 try terminal.startProcess(
                     executable: shellPath,
                     args: ["-l", "-i"],
-                    environment: nil
+                    environment: environment
                 )
             } else {
                 // For other shells, start with defaults
                 try terminal.startProcess(
                     executable: shellPath,
                     args: [],
-                    environment: nil
+                    environment: environment
                 )
             }
             isReady = true
 
             print("✅ PTY Terminal started successfully")
 
-            // If there's an initial command, send it after shell starts
+            // Change to working directory if specified
+            if let workDir = workingDirectory {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                    self?.sendCommand("cd \"\(workDir)\"")
+                }
+            }
+
+            // If there's an initial command, send it after shell starts and directory change
             if let command = initialCommand {
-                // Give shell a moment to initialize, then send command
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                // Give shell a moment to initialize and change directory, then send command
+                let delay = workingDirectory != nil ? 0.7 : 0.5
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
                     self?.sendCommand(command)
                 }
             }

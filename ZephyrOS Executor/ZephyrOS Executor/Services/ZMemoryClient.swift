@@ -8,9 +8,9 @@
 import Foundation
 
 class ZMemoryClient {
-    private let baseURL: URL
+    internal let baseURL: URL
     private var apiKey: String
-    private let session: URLSession
+    internal let session: URLSession
     private var oauthToken: String?
 
     private static let iso8601FractionalFormatter: ISO8601DateFormatter = {
@@ -58,7 +58,7 @@ class ZMemoryClient {
         self.session = URLSession(configuration: config)
     }
 
-    private func makeDecoder() -> JSONDecoder {
+    internal func makeDecoder() -> JSONDecoder {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .custom { decoder in
             let container = try decoder.singleValueContainer()
@@ -91,7 +91,7 @@ class ZMemoryClient {
     }
 
     // Get authorization header value
-    private func getAuthorizationHeader() -> String {
+    internal func getAuthorizationHeader() -> String {
         // Prefer OAuth token if available, fallback to API key
         if let oauthToken = oauthToken {
             return "Bearer \(oauthToken)"
@@ -339,7 +339,7 @@ class ZMemoryClient {
 
     // MARK: - Helper Methods
 
-    private func validateResponse(_ response: URLResponse) throws {
+    internal func validateResponse(_ response: URLResponse) throws {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
         }

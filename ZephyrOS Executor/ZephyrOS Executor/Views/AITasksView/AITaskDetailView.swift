@@ -13,11 +13,14 @@ struct AITaskDetailView: View {
     let simpleTask: SimpleTask?
     let onStatusUpdate: (AITaskStatus) async -> Void
 
+    @StateObject private var workspaceManager = WorkspaceManager.shared
     @State private var isUpdating = false
     @State private var showFullObjective = false
     @State private var showFullDeliverables = false
     @State private var showFullContext = false
     @State private var showTerminal = false
+    @State private var workspace: ExecutorWorkspace?
+    @State private var isCreatingWorkspace = false
 
     var body: some View {
         ScrollView {
@@ -45,14 +48,37 @@ struct AITaskDetailView: View {
 
                         Spacer()
 
-                        // Terminal Button
-                        Button(action: {
-                            openTerminal()
-                        }) {
-                            Label("Terminal", systemImage: "terminal.fill")
+                        VStack(alignment: .trailing, spacing: 4) {
+                            // Workspace status
+                            if let workspace = workspace {
+                                HStack(spacing: 4) {
+                                    Circle()
+                                        .fill(workspaceStatusColor(workspace.status))
+                                        .frame(width: 6, height: 6)
+                                    Text(workspace.status.rawValue)
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            } else if isCreatingWorkspace {
+                                HStack(spacing: 4) {
+                                    ProgressView()
+                                        .scaleEffect(0.5)
+                                    Text("Creating workspace...")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+
+                            // Terminal Button
+                            Button(action: {
+                                openTerminal()
+                            }) {
+                                Label("Terminal", systemImage: "terminal.fill")
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.green)
+                            .disabled(workspace == nil && !isCreatingWorkspace)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.green)
                     }
 
                     // Status actions
@@ -198,13 +224,56 @@ struct AITaskDetailView: View {
             .padding()
         }
         .sheet(isPresented: $showTerminal) {
-            SwiftTerminalView(task: task)
+            SwiftTerminalView(task: task, workspace: workspace)
+        }
+        .onAppear {
+            loadOrCreateWorkspace()
         }
     }
 
     // MARK: - Actions
 
     private func openTerminal() {
+        if workspace == nil && !isCreatingWorkspace {
+            // Create workspace first
+            loadOrCreateWorkspace()
+        }
         showTerminal = true
+    }
+
+    private func loadOrCreateWorkspace() {
+        // TODO: Check if workspace already exists
+        // For now, always create new workspace
+        // In production, query workspace tasks to find workspace for this AI task
+
+        // Create new workspace for this task
+        _Concurrency.Task {
+            isCreatingWorkspace = true
+            defer { isCreatingWorkspace = false }
+
+            do {
+                let created = try await workspaceManager.createWorkspace(for: task, agent: agent)
+                workspace = created
+            } catch {
+                print("Failed to create workspace: \(error)")
+            }
+        }
+    }
+
+    private func workspaceStatusColor(_ status: ExecutorWorkspace.WorkspaceStatus) -> Color {
+        switch status {
+        case .ready, .assigned, .running:
+            return .green
+        case .creating, .initializing, .cloning:
+            return .orange
+        case .completed:
+            return .blue
+        case .failed:
+            return .red
+        case .paused:
+            return .yellow
+        case .archived, .cleanup:
+            return .gray
+        }
     }
 }

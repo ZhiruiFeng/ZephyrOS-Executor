@@ -9,6 +9,7 @@ import SwiftUI
 
 struct DashboardView: View {
     @EnvironmentObject var executorManager: ExecutorManager
+    @StateObject private var workspaceManager = WorkspaceManager.shared
 
     var body: some View {
         ScrollView {
@@ -18,6 +19,9 @@ struct DashboardView: View {
 
                 // Status Card
                 StatusCard()
+
+                // Executor Device Card
+                ExecutorDeviceCard()
 
                 // Active Tasks
                 ActiveTasksSection()
@@ -225,6 +229,136 @@ struct ActiveTaskCard: View {
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color(nsColor: .controlBackgroundColor))
         )
+    }
+}
+
+struct ExecutorDeviceCard: View {
+    @StateObject private var workspaceManager = WorkspaceManager.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Label("Executor Device", systemImage: "server.rack")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+
+                Spacer()
+
+                NavigationLink(destination: ExecutorConfigurationView(showBackButton: true)) {
+                    Label("Configure", systemImage: "gearshape")
+                        .font(.caption)
+                }
+                .buttonStyle(.borderless)
+            }
+
+            if let device = workspaceManager.currentDevice {
+                // Device is registered
+                VStack(spacing: 12) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(device.deviceName)
+                                .font(.headline)
+                            Text(device.deviceId)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Spacer()
+
+                        HStack(spacing: 16) {
+                            VStack(alignment: .trailing, spacing: 2) {
+                                HStack(spacing: 4) {
+                                    Circle()
+                                        .fill(device.isOnline ? Color.green : Color.red)
+                                        .frame(width: 6, height: 6)
+                                    Text(device.isOnline ? "Online" : "Offline")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+
+                                HStack(spacing: 4) {
+                                    Circle()
+                                        .fill(workspaceManager.isHeartbeatActive ? Color.green : Color.orange)
+                                        .frame(width: 6, height: 6)
+                                    Text(workspaceManager.isHeartbeatActive ? "Heartbeat Active" : "No Heartbeat")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                    }
+
+                    Divider()
+
+                    HStack(spacing: 24) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Workspaces")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("\(device.currentWorkspacesCount) / \(device.maxConcurrentWorkspaces)")
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                        }
+
+                        Divider()
+                            .frame(height: 30)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Disk Usage")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("\(Int(device.currentDiskUsageGb)) / \(device.maxDiskUsageGb) GB")
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                        }
+
+                        Divider()
+                            .frame(height: 30)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Active")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("\(workspaceManager.activeWorkspaces.count)")
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                        }
+                    }
+                }
+            } else {
+                // Device initializing
+                HStack(spacing: 16) {
+                    ProgressView()
+                        .scaleEffect(1.5)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Initializing Device...")
+                            .font(.headline)
+                        Text("Your executor device is being automatically registered")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Spacer()
+
+                    NavigationLink(destination: ExecutorConfigurationView(showBackButton: true)) {
+                        Label("View Configuration", systemImage: "gearshape")
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.blue.opacity(0.1))
+                )
+            }
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
+        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
 }
 

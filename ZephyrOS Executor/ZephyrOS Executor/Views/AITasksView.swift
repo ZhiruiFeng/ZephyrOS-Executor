@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AITasksView: View {
     @EnvironmentObject var executorManager: ExecutorManager
+    @StateObject private var workspaceManager = WorkspaceManager.shared
     @State private var aiTasks: [AITask] = []
     @State private var agents: [AIAgent] = []
     @State private var tasks: [SimpleTask] = []

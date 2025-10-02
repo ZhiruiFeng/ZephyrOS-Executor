@@ -13,6 +13,7 @@ import AppKit
 /// Provides a real interactive terminal with full PTY support
 struct SwiftTerminalView: View {
     let task: AITask
+    var workspace: ExecutorWorkspace? = nil
 
     @StateObject private var controller = PTYTerminalController()
     @State private var terminalView: LocalProcessTerminalView?
@@ -120,6 +121,13 @@ struct SwiftTerminalView: View {
 
                 Spacer()
 
+                if let workspace = workspace {
+                    Text("Workspace: \(workspace.status.rawValue)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.trailing, 8)
+                }
+
                 Text("Task ID: \(task.id)")
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -145,12 +153,26 @@ struct SwiftTerminalView: View {
     // MARK: - Setup
 
     private func setupTerminal() {
-        // Determine initial command based on task
-        let initialCommand = "echo 'Hello from SwiftTerm!'"
+        // Determine working directory from workspace or use default
+        let workingDirectory: String?
+        if let workspace = workspace, FileManager.default.fileExists(atPath: workspace.workspacePath) {
+            // Use workspace path with /src subdirectory if it exists
+            let srcPath = (workspace.workspacePath as NSString).appendingPathComponent("src")
+            workingDirectory = FileManager.default.fileExists(atPath: srcPath) ? srcPath : workspace.workspacePath
+        } else {
+            workingDirectory = nil
+        }
 
-        // Create terminal with initial command
+        // Determine initial command based on task
+        var initialCommand = "echo 'Terminal ready for task execution'"
+        if let workspace = workspace {
+            initialCommand += " && echo 'Workspace: \(workspace.workspacePath)' && ls -la"
+        }
+
+        // Create terminal with workspace directory
         let terminal = controller.createTerminal(
             shellPath: "/bin/zsh",
+            workingDirectory: workingDirectory,
             initialCommand: initialCommand
         )
 
@@ -161,7 +183,12 @@ struct SwiftTerminalView: View {
         controller.onOutput = { output in
             print("📋 Terminal output: \(output)")
             // TODO: Send to ZMemory task system
-            // await zmemoryClient.appendTaskLog(taskId: task.id, log: output)
+            // Task {
+            //     if let workspace = workspace {
+            //         let event = ExecutorWorkspaceEvent(...)
+            //         try? await ZMemoryClient.shared.logWorkspaceEvent(workspaceId: workspace.id, event: event)
+            //     }
+            // }
         }
 
         controller.onError = { error in
