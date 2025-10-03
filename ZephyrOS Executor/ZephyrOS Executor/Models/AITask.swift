@@ -237,7 +237,7 @@ struct AITaskExecutionResult: Codable, Equatable {
 }
 
 // Agent info for display
-struct AIAgent: Identifiable, Codable {
+struct AIAgent: Identifiable, Codable, Hashable {
     let id: String
     let name: String
     let description: String?

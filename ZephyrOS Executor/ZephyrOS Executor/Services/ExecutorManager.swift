@@ -177,7 +177,7 @@ class ExecutorManager: ObservableObject {
         }
 
         guard httpResponse.statusCode == 200 else {
-            throw APIError.httpError(statusCode: httpResponse.statusCode)
+            throw APIError.httpError(statusCode: httpResponse.statusCode, body: nil)
         }
 
         struct SupabaseAuthResponse: Codable {

@@ -354,7 +354,7 @@ class ZMemoryClient {
         case 500...599:
             throw APIError.serverError
         default:
-            throw APIError.httpError(statusCode: httpResponse.statusCode)
+            throw APIError.httpError(statusCode: httpResponse.statusCode, body: nil)
         }
     }
 }
@@ -373,7 +373,7 @@ enum APIError: LocalizedError {
     case unauthorized
     case notFound
     case serverError
-    case httpError(statusCode: Int)
+    case httpError(statusCode: Int, body: String?)
     case decodingError(Error)
 
     var errorDescription: String? {
@@ -388,8 +388,12 @@ enum APIError: LocalizedError {
             return "Resource not found"
         case .serverError:
             return "Server error occurred"
-        case .httpError(let code):
-            return "HTTP error: \(code)"
+        case .httpError(let code, let body):
+            var message = "HTTP error: \(code)"
+            if let body = body {
+                message += " - Response: \(body)"
+            }
+            return message
         case .decodingError(let error):
             return "Failed to decode response: \(error.localizedDescription)"
         }

@@ -110,6 +110,7 @@ struct ExecutorWorkspace: Codable, Identifiable {
     var workspacePath: String
     var relativePath: String
     var metadataPath: String?
+    var workspaceName: String // User-friendly name for the workspace
     var repoUrl: String?
     var repoBranch: String
     var projectType: String?
@@ -199,6 +200,7 @@ struct ExecutorWorkspace: Codable, Identifiable {
         case workspacePath = "workspace_path"
         case relativePath = "relative_path"
         case metadataPath = "metadata_path"
+        case workspaceName = "workspace_name"
         case repoUrl = "repo_url"
         case repoBranch = "repo_branch"
         case projectType = "project_type"

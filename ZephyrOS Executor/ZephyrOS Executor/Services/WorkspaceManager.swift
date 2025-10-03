@@ -162,6 +162,7 @@ class WorkspaceManager: ObservableObject {
     /// Create a new workspace with custom parameters
     func createWorkspace(
         agentId: String,
+        workspaceName: String? = nil,
         workspacePath: String? = nil,
         projectName: String? = nil,
         projectType: String? = nil,
@@ -192,7 +193,10 @@ class WorkspaceManager: ObservableObject {
         // Create workspace directory structure locally first
         try createDirectoryIfNeeded(at: finalWorkspacePath)
 
-        // Create workspace
+        // Generate workspace name if not provided
+        let finalWorkspaceName = workspaceName ?? generateWorkspaceName(projectName: projectName, repoUrl: repoUrl)
+
+        // Create workspace object
         let workspace = ExecutorWorkspace(
             id: UUID().uuidString,
             executorDeviceId: device.id,
@@ -201,6 +205,7 @@ class WorkspaceManager: ObservableObject {
             workspacePath: finalWorkspacePath,
             relativePath: finalWorkspacePath.replacingOccurrences(of: device.rootWorkspacePath, with: ""),
             metadataPath: nil,
+            workspaceName: finalWorkspaceName,
             repoUrl: repoUrl,
             repoBranch: branch,
             projectType: projectType,
@@ -226,20 +231,35 @@ class WorkspaceManager: ObservableObject {
             updatedAt: Date()
         )
 
-        await MainActor.run {
-            activeWorkspaces.append(workspace)
-        }
+        print("🔨 Creating workspace for agent: \(agentId)")
+        print("🔨 Device ID: \(device.id)")
+        print("🔨 Workspace path: \(finalWorkspacePath)")
 
-        // Setup directories asynchronously
-        _Concurrency.Task {
-            do {
-                try await setupWorkspaceDirectories(workspace: workspace)
-            } catch {
-                try? await updateWorkspaceStatus(id: workspace.id, status: .failed, error: error.localizedDescription)
+        // Create workspace on backend
+        do {
+            let createdWorkspace = try await client.createWorkspace(workspace)
+            print("✅ Workspace created successfully with ID: \(createdWorkspace.id)")
+
+            await MainActor.run {
+                activeWorkspaces.append(createdWorkspace)
             }
-        }
 
-        return workspace
+            // Setup directories asynchronously
+            _Concurrency.Task {
+                do {
+                    try await setupWorkspaceDirectories(workspace: createdWorkspace)
+                } catch {
+                    print("❌ Failed to setup workspace directories: \(error)")
+                    try? await updateWorkspaceStatus(id: createdWorkspace.id, status: .failed, error: error.localizedDescription)
+                }
+            }
+
+            return createdWorkspace
+        } catch {
+            print("❌ Failed to create workspace on backend: \(error)")
+            print("❌ Error details: \(error.localizedDescription)")
+            throw error
+        }
     }
 
     /// Create a new workspace for a task
@@ -258,15 +278,13 @@ class WorkspaceManager: ObservableObject {
         // Generate workspace path
         let workspacePath = generateWorkspacePath(device: device, taskId: task.id)
 
-        // For now, create a minimal workspace structure
-        // TODO: Full workspace creation with all fields based on ExecutorModels.swift
-        // This is a simplified version for initial implementation
-
         // Create workspace directory structure locally first
         try createDirectoryIfNeeded(at: workspacePath)
 
-        // Return a stub workspace for now
-        // In production, this will call the backend API
+        // Generate workspace name from task objective
+        let workspaceName = "Task: \(task.objective.prefix(40))..."
+
+        // Create workspace object
         let workspace = ExecutorWorkspace(
             id: UUID().uuidString,
             executorDeviceId: device.id,
@@ -275,6 +293,7 @@ class WorkspaceManager: ObservableObject {
             workspacePath: workspacePath,
             relativePath: workspacePath.replacingOccurrences(of: device.rootWorkspacePath, with: ""),
             metadataPath: nil,
+            workspaceName: workspaceName,
             repoUrl: nil,  // AITask doesn't have repository info
             repoBranch: "main",
             projectType: nil,
@@ -300,23 +319,36 @@ class WorkspaceManager: ObservableObject {
             updatedAt: Date()
         )
 
-        // TODO: Create workspace on backend
-        // let created = try await client.createWorkspace(workspace)
+        print("🔨 Creating workspace for task: \(task.id)")
+        print("🔨 Agent ID: \(agent?.id ?? "none")")
+        print("🔨 Device ID: \(device.id)")
+        print("🔨 Workspace path: \(workspacePath)")
 
-        await MainActor.run {
-            activeWorkspaces.append(workspace)
-        }
+        // Create workspace on backend
+        do {
+            let createdWorkspace = try await client.createWorkspace(workspace)
+            print("✅ Workspace created successfully with ID: \(createdWorkspace.id)")
 
-        // Setup directories asynchronously
-        _Concurrency.Task {
-            do {
-                try await setupWorkspaceDirectories(workspace: workspace)
-            } catch {
-                try? await updateWorkspaceStatus(id: workspace.id, status: .failed, error: error.localizedDescription)
+            await MainActor.run {
+                activeWorkspaces.append(createdWorkspace)
             }
-        }
 
-        return workspace
+            // Setup directories asynchronously
+            _Concurrency.Task {
+                do {
+                    try await setupWorkspaceDirectories(workspace: createdWorkspace)
+                } catch {
+                    print("❌ Failed to setup workspace directories: \(error)")
+                    try? await updateWorkspaceStatus(id: createdWorkspace.id, status: .failed, error: error.localizedDescription)
+                }
+            }
+
+            return createdWorkspace
+        } catch {
+            print("❌ Failed to create workspace on backend for task: \(error)")
+            print("❌ Error details: \(error.localizedDescription)")
+            throw error
+        }
     }
 
     /// Setup workspace directory structure
@@ -617,6 +649,29 @@ class WorkspaceManager: ObservableObject {
         return (device.rootWorkspacePath as NSString).appendingPathComponent(dirName)
     }
 
+    private func generateWorkspaceName(projectName: String?, repoUrl: String?) -> String {
+        // Try to use project name first
+        if let projectName = projectName, !projectName.isEmpty {
+            return projectName
+        }
+
+        // Extract repo name from URL
+        if let repoUrl = repoUrl, !repoUrl.isEmpty {
+            // Extract last component of URL path (e.g., "myrepo.git" or "myrepo")
+            let urlComponents = repoUrl.split(separator: "/")
+            if let lastComponent = urlComponents.last {
+                let repoName = String(lastComponent).replacingOccurrences(of: ".git", with: "")
+                return "Workspace: \(repoName)"
+            }
+        }
+
+        // Default: generate unique name with timestamp
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        let timestamp = formatter.string(from: Date())
+        return "Workspace \(timestamp)"
+    }
+
     private func createDirectoryIfNeeded(at path: String) throws {
         if !fileManager.fileExists(atPath: path) {
             try fileManager.createDirectory(atPath: path, withIntermediateDirectories: true, attributes: nil)
@@ -650,17 +705,23 @@ class WorkspaceManager: ObservableObject {
             throw WorkspaceError.clientNotAvailable
         }
 
-        guard let device = currentDevice else { return }
+        // Ensure device is registered first
+        let device = try await ensureDeviceRegistered()
+
+        print("📱 Loading workspaces for device: \(device.id)")
 
         let workspaces = try await client.listWorkspaces(
             executorDeviceId: device.id,
             status: nil
         )
 
+        print("📦 Received \(workspaces.count) workspaces from backend")
+
         await MainActor.run {
             self.activeWorkspaces = workspaces.filter {
                 $0.status != .archived && $0.status != .cleanup
             }
+            print("✅ Filtered to \(self.activeWorkspaces.count) active workspaces")
         }
     }
 }

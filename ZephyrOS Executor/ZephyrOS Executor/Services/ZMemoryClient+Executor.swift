@@ -146,10 +146,55 @@ extension ZMemoryClient {
         let encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
         encoder.dateEncodingStrategy = .iso8601
-        request.httpBody = try encoder.encode(workspace)
+
+        do {
+            request.httpBody = try encoder.encode(workspace)
+
+            // Log request details
+            print("📤 Creating workspace at: \(url.absoluteString)")
+            if let bodyData = request.httpBody, let bodyString = String(data: bodyData, encoding: .utf8) {
+                print("📤 Request body: \(bodyString)")
+            }
+        } catch {
+            print("❌ Failed to encode workspace: \(error)")
+            throw error
+        }
 
         let (data, response) = try await session.data(for: request)
-        try validateResponse(response)
+
+        // Log response details before validation
+        if let httpResponse = response as? HTTPURLResponse {
+            print("📥 Response status: \(httpResponse.statusCode)")
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("📥 Response body: \(responseString)")
+            }
+        }
+
+        // Enhanced validation with response body
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        switch httpResponse.statusCode {
+        case 200...299:
+            break // Success
+        case 400:
+            let errorBody = String(data: data, encoding: .utf8)
+            print("❌ Bad Request (400): \(errorBody ?? "No error details")")
+            throw APIError.httpError(statusCode: 400, body: errorBody)
+        case 401:
+            throw APIError.unauthorized
+        case 404:
+            throw APIError.notFound
+        case 500...599:
+            let errorBody = String(data: data, encoding: .utf8)
+            print("❌ Server Error (\(httpResponse.statusCode)): \(errorBody ?? "No error details")")
+            throw APIError.serverError
+        default:
+            let errorBody = String(data: data, encoding: .utf8)
+            print("❌ HTTP Error (\(httpResponse.statusCode)): \(errorBody ?? "No error details")")
+            throw APIError.httpError(statusCode: httpResponse.statusCode, body: errorBody)
+        }
 
         let decoder = makeDecoder()
         let workspaceResponse = try decoder.decode([String: ExecutorWorkspace].self, from: data)
@@ -200,8 +245,12 @@ extension ZMemoryClient {
         if let status = status {
             queryItems.append(URLQueryItem(name: "status", value: status.rawValue))
         }
-        queryItems.append(URLQueryItem(name: "limit", value: String(limit)))
-        queryItems.append(URLQueryItem(name: "offset", value: String(offset)))
+
+        // Note: Do NOT send limit/offset as query parameters
+        // The backend validation expects numeric types, but URLQueryItem values are always strings
+        // This causes a type mismatch error. Let the backend use its own defaults instead.
+        // If pagination is needed, the backend API needs to be fixed to accept string query params
+        // and parse them as numbers, which is standard for REST APIs
 
         if !queryItems.isEmpty {
             components.queryItems = queryItems
@@ -214,8 +263,43 @@ extension ZMemoryClient {
         var request = URLRequest(url: url)
         request.setValue(getAuthorizationHeader(), forHTTPHeaderField: "Authorization")
 
+        print("📤 Listing workspaces at: \(url.absoluteString)")
+
         let (data, response) = try await session.data(for: request)
-        try validateResponse(response)
+
+        // Log response details
+        if let httpResponse = response as? HTTPURLResponse {
+            print("📥 Response status: \(httpResponse.statusCode)")
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("📥 Response body: \(responseString.prefix(500))")
+            }
+        }
+
+        // Enhanced validation with response body
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        switch httpResponse.statusCode {
+        case 200...299:
+            break // Success
+        case 400:
+            let errorBody = String(data: data, encoding: .utf8)
+            print("❌ Bad Request (400): \(errorBody ?? "No error details")")
+            throw APIError.httpError(statusCode: 400, body: errorBody)
+        case 401:
+            throw APIError.unauthorized
+        case 404:
+            throw APIError.notFound
+        case 500...599:
+            let errorBody = String(data: data, encoding: .utf8)
+            print("❌ Server Error (\(httpResponse.statusCode)): \(errorBody ?? "No error details")")
+            throw APIError.serverError
+        default:
+            let errorBody = String(data: data, encoding: .utf8)
+            print("❌ HTTP Error (\(httpResponse.statusCode)): \(errorBody ?? "No error details")")
+            throw APIError.httpError(statusCode: httpResponse.statusCode, body: errorBody)
+        }
 
         let decoder = makeDecoder()
         let workspacesResponse = try decoder.decode(ExecutorWorkspacesResponse.self, from: data)
@@ -233,7 +317,22 @@ extension ZMemoryClient {
 
         request.httpBody = try JSONSerialization.data(withJSONObject: updates)
 
+        // Log request details
+        print("📤 Updating workspace at: \(url.absoluteString)")
+        if let bodyData = request.httpBody, let bodyString = String(data: bodyData, encoding: .utf8) {
+            print("📤 Update body: \(bodyString)")
+        }
+
         let (data, response) = try await session.data(for: request)
+
+        // Log response details
+        if let httpResponse = response as? HTTPURLResponse {
+            print("📥 Response status: \(httpResponse.statusCode)")
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("📥 Response body: \(responseString)")
+            }
+        }
+
         try validateResponse(response)
 
         let decoder = makeDecoder()
@@ -243,6 +342,7 @@ extension ZMemoryClient {
             throw APIError.decodingError(NSError(domain: "Workspace not found in response", code: -1))
         }
 
+        print("✅ Workspace updated: \(workspace.id)")
         return workspace
     }
 
