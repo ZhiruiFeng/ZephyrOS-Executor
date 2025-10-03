@@ -709,6 +709,7 @@ struct WorkspaceDetailSheet: View {
     @State private var agentName: String?
     @State private var isLoadingAgent = false
     @State private var showEditSheet = false
+    @State private var showTerminal = false
 
     var body: some View {
         VStack(spacing: 24) {
@@ -792,10 +793,11 @@ struct WorkspaceDetailSheet: View {
                 }
                 .buttonStyle(.bordered)
 
-                Button(action: openTerminal) {
-                    Label("Open Terminal", systemImage: "terminal")
+                Button(action: { showTerminal = true }) {
+                    Label("Open Terminal", systemImage: "terminal.fill")
                 }
                 .buttonStyle(.borderedProminent)
+                .tint(.green)
             }
         }
         .padding(24)
@@ -805,6 +807,9 @@ struct WorkspaceDetailSheet: View {
         }
         .sheet(isPresented: $showEditSheet) {
             EditWorkspaceSheet(workspace: workspace)
+        }
+        .sheet(isPresented: $showTerminal) {
+            WorkspaceTerminalView(workspace: workspace)
         }
     }
 
@@ -829,10 +834,6 @@ struct WorkspaceDetailSheet: View {
         }
     }
 
-    private func openTerminal() {
-        // TODO: Implement terminal opening
-        dismiss()
-    }
 }
 
 struct DetailRow: View {
@@ -886,9 +887,11 @@ struct EditWorkspaceSheet: View {
     @State private var enableGit: Bool
 
     @State private var isSaving = false
+    @State private var isDeleting = false
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var showAdvanced = false
+    @State private var showDeleteConfirmation = false
 
     init(workspace: ExecutorWorkspace) {
         self.workspace = workspace
@@ -1093,13 +1096,32 @@ struct EditWorkspaceSheet: View {
 
             // Actions
             HStack {
+                // Delete button on the left
+                Button(action: { showDeleteConfirmation = true }) {
+                    if isDeleting {
+                        HStack {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                            Text("Removing...")
+                        }
+                        .frame(minWidth: 100)
+                    } else {
+                        Label("Remove", systemImage: "trash")
+                            .frame(minWidth: 100)
+                    }
+                }
+                .buttonStyle(.bordered)
+                .tint(.red)
+                .disabled(isSaving || isDeleting)
+
+                Spacer()
+
                 Button(action: { dismiss() }) {
                     Text("Cancel")
                         .frame(minWidth: 100)
                 }
                 .buttonStyle(.bordered)
-
-                Spacer()
+                .disabled(isSaving || isDeleting)
 
                 Button(action: saveChanges) {
                     if isSaving {
@@ -1112,7 +1134,7 @@ struct EditWorkspaceSheet: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(isSaving)
+                .disabled(isSaving || isDeleting)
             }
             .padding(24)
         }
@@ -1121,6 +1143,14 @@ struct EditWorkspaceSheet: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage)
+        }
+        .alert("Remove Workspace", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Remove", role: .destructive) {
+                deleteWorkspace()
+            }
+        } message: {
+            Text("Are you sure you want to remove '\(workspace.workspaceName)'? This action cannot be undone.")
         }
     }
 
@@ -1235,6 +1265,33 @@ struct EditWorkspaceSheet: View {
             }
         }
         return vars.isEmpty ? nil : vars
+    }
+
+    private func deleteWorkspace() {
+        _Concurrency.Task {
+            isDeleting = true
+            defer { isDeleting = false }
+
+            do {
+                guard let client = ExecutorManager.shared.getZMemoryClient() else {
+                    throw WorkspaceError.clientNotAvailable
+                }
+
+                try await client.deleteWorkspace(id: workspace.id)
+
+                // Remove from local workspace list
+                await MainActor.run {
+                    workspaceManager.activeWorkspaces.removeAll { $0.id == workspace.id }
+                    dismiss()
+                }
+            } catch {
+                print("❌ Failed to delete workspace: \(error)")
+                await MainActor.run {
+                    errorMessage = "Failed to remove workspace: \(error.localizedDescription)"
+                    showError = true
+                }
+            }
+        }
     }
 }
 

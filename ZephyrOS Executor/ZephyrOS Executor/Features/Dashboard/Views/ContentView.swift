@@ -22,11 +22,9 @@ struct ContentView: View {
                 switch selectedTab {
                 case .dashboard:
                     DashboardView()
-                case .tasks:
-                    TaskQueueView()
                 case .aiTasks:
                     AITasksView()
-                case .executor:
+                case .workspaces:
                     WorkspaceManagementView()
                 case .logs:
                     LogsView()
@@ -44,9 +42,8 @@ struct ContentView: View {
 
 enum SidebarItem: String, CaseIterable {
     case dashboard = "Dashboard"
-    case tasks = "Tasks"
     case aiTasks = "AI Tasks"
-    case executor = "Executor"
+    case workspaces = "Workspaces"
     case logs = "Logs"
     case profile = "Profile"
     case settings = "Settings"
@@ -54,9 +51,8 @@ enum SidebarItem: String, CaseIterable {
     var icon: String {
         switch self {
         case .dashboard: return "gauge.badge.plus"
-        case .tasks: return "checklist"
         case .aiTasks: return "sparkles"
-        case .executor: return "server.rack"
+        case .workspaces: return "folder.badge.gearshape"
         case .logs: return "list.bullet.rectangle"
         case .profile: return "person.circle.fill"
         case .settings: return "gearshape.fill"

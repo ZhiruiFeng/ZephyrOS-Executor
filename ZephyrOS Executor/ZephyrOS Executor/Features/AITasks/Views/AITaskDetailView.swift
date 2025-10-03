@@ -18,9 +18,7 @@ struct AITaskDetailView: View {
     @State private var showFullObjective = false
     @State private var showFullDeliverables = false
     @State private var showFullContext = false
-    @State private var showTerminal = false
     @State private var workspace: ExecutorWorkspace?
-    @State private var isCreatingWorkspace = false
 
     var body: some View {
         ScrollView {
@@ -59,25 +57,7 @@ struct AITaskDetailView: View {
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
                                 }
-                            } else if isCreatingWorkspace {
-                                HStack(spacing: 4) {
-                                    ProgressView()
-                                        .scaleEffect(0.5)
-                                    Text("Creating workspace...")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                }
                             }
-
-                            // Terminal Button
-                            Button(action: {
-                                openTerminal()
-                            }) {
-                                Label("Terminal", systemImage: "terminal.fill")
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.green)
-                            .disabled(workspace == nil && !isCreatingWorkspace)
                         }
                     }
 
@@ -223,41 +203,18 @@ struct AITaskDetailView: View {
             }
             .padding()
         }
-        .sheet(isPresented: $showTerminal) {
-            SwiftTerminalView(task: task, workspace: workspace)
-        }
         .onAppear {
-            loadOrCreateWorkspace()
+            loadWorkspace()
         }
     }
 
     // MARK: - Actions
 
-    private func openTerminal() {
-        if workspace == nil && !isCreatingWorkspace {
-            // Create workspace first
-            loadOrCreateWorkspace()
-        }
-        showTerminal = true
-    }
-
-    private func loadOrCreateWorkspace() {
-        // TODO: Check if workspace already exists
-        // For now, always create new workspace
-        // In production, query workspace tasks to find workspace for this AI task
-
-        // Create new workspace for this task
-        _Concurrency.Task {
-            isCreatingWorkspace = true
-            defer { isCreatingWorkspace = false }
-
-            do {
-                let created = try await workspaceManager.createWorkspace(for: task, agent: agent)
-                workspace = created
-            } catch {
-                print("Failed to create workspace: \(error)")
-            }
-        }
+    private func loadWorkspace() {
+        // Find existing workspace for this task
+        // Note: This is a simplified lookup. In production, you should query workspace tasks
+        // to find the workspace assigned to this AI task via ExecutorWorkspaceTask
+        workspace = workspaceManager.activeWorkspaces.first(where: { $0.agentId == task.agentId })
     }
 
     private func workspaceStatusColor(_ status: ExecutorWorkspace.WorkspaceStatus) -> Color {

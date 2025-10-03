@@ -18,9 +18,9 @@ struct AITasksHeader: View {
         VStack(spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("AI Task Grantor")
+                    Text("AI Task Display")
                         .font(.system(size: 28, weight: .bold))
-                    Text("Design and assign tasks to AI agents with clear objectives")
+                    Text("Monitor and manage AI agent tasks")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
