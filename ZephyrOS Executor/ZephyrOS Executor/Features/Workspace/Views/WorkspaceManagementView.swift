@@ -1136,24 +1136,25 @@ struct EditWorkspaceSheet: View {
                 if !workspaceName.isEmpty && workspaceName != workspace.workspaceName {
                     updates["workspace_name"] = workspaceName
                 }
-                if !projectName.isEmpty && projectName != workspace.projectName {
-                    updates["project_name"] = projectName
+                // Allow clearing optional fields by comparing directly without empty check
+                if projectName != (workspace.projectName ?? "") {
+                    updates["project_name"] = projectName.isEmpty ? nil : projectName
                 }
-                if !projectType.isEmpty && projectType != workspace.projectType {
-                    updates["project_type"] = projectType
+                if projectType != (workspace.projectType ?? "") {
+                    updates["project_type"] = projectType.isEmpty ? nil : projectType
                 }
 
-                // Repository fields
-                if !repoUrl.isEmpty && repoUrl != workspace.repoUrl {
-                    updates["repo_url"] = repoUrl
+                // Repository fields - allow clearing
+                if repoUrl != (workspace.repoUrl ?? "") {
+                    updates["repo_url"] = repoUrl.isEmpty ? nil : repoUrl
                 }
                 if repoBranch != workspace.repoBranch {
                     updates["repo_branch"] = repoBranch
                 }
 
-                // Advanced fields
-                if !systemPrompt.isEmpty && systemPrompt != workspace.systemPrompt {
-                    updates["system_prompt"] = systemPrompt
+                // Advanced fields - allow clearing
+                if systemPrompt != (workspace.systemPrompt ?? "") {
+                    updates["system_prompt"] = systemPrompt.isEmpty ? nil : systemPrompt
                 }
 
                 // Parse allowed commands
