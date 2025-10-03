@@ -317,22 +317,7 @@ extension ZMemoryClient {
 
         request.httpBody = try JSONSerialization.data(withJSONObject: updates)
 
-        // Log request details
-        print("📤 Updating workspace at: \(url.absoluteString)")
-        if let bodyData = request.httpBody, let bodyString = String(data: bodyData, encoding: .utf8) {
-            print("📤 Update body: \(bodyString)")
-        }
-
         let (data, response) = try await session.data(for: request)
-
-        // Log response details
-        if let httpResponse = response as? HTTPURLResponse {
-            print("📥 Response status: \(httpResponse.statusCode)")
-            if let responseString = String(data: data, encoding: .utf8) {
-                print("📥 Response body: \(responseString)")
-            }
-        }
-
         try validateResponse(response)
 
         let decoder = makeDecoder()
@@ -342,7 +327,6 @@ extension ZMemoryClient {
             throw APIError.decodingError(NSError(domain: "Workspace not found in response", code: -1))
         }
 
-        print("✅ Workspace updated: \(workspace.id)")
         return workspace
     }
 

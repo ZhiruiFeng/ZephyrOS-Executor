@@ -1184,7 +1184,6 @@ struct EditWorkspaceSheet: View {
                 }
 
                 guard !updates.isEmpty else {
-                    print("ℹ️ No changes to save")
                     await MainActor.run {
                         dismiss()
                     }
@@ -1195,22 +1194,12 @@ struct EditWorkspaceSheet: View {
                     throw WorkspaceError.clientNotAvailable
                 }
 
-                print("💾 Saving workspace changes:")
-                print("   Fields to update: \(Array(updates.keys))")
-                print("   Workspace ID: \(workspace.id)")
-
                 let updatedWorkspace = try await client.updateWorkspace(id: workspace.id, updates: updates)
-                print("✅ Workspace updated successfully")
-                print("   Updated workspace name: \(updatedWorkspace.workspaceName)")
 
                 // Update local workspace list
                 await MainActor.run {
                     if let index = workspaceManager.activeWorkspaces.firstIndex(where: { $0.id == workspace.id }) {
-                        print("   Updating workspace at index \(index)")
                         workspaceManager.activeWorkspaces[index] = updatedWorkspace
-                        print("   Local workspace list updated")
-                    } else {
-                        print("⚠️ Workspace not found in local list!")
                     }
                     dismiss()
                 }
