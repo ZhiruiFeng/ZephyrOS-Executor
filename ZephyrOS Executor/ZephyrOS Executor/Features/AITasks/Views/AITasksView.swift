@@ -20,18 +20,26 @@ struct AITasksView: View {
     @State private var searchText = ""
     @State private var selectedTask: AITask?
 
+    var pendingTasks: [AITask] {
+        aiTasks.filter {
+            $0.status == .pending || $0.status == .assigned || $0.status == .inProgress
+        }
+    }
+
+    var historicalTasks: [AITask] {
+        aiTasks.filter {
+            $0.status == .completed || $0.status == .failed || $0.status == .cancelled
+        }
+    }
+
     var filteredTasks: [AITask] {
         let tabFiltered: [AITask]
 
         switch selectedTab {
         case .pending:
-            tabFiltered = aiTasks.filter {
-                $0.status == .pending || $0.status == .assigned || $0.status == .inProgress
-            }
+            tabFiltered = pendingTasks
         case .history:
-            tabFiltered = aiTasks.filter {
-                $0.status == .completed || $0.status == .failed || $0.status == .cancelled
-            }
+            tabFiltered = historicalTasks
         }
 
         let filtered = tabFiltered.filter { task in
@@ -57,6 +65,25 @@ struct AITasksView: View {
         }
     }
 
+    // Tasks without workspace assignment
+    var unassignedTasks: [AITask] {
+        filteredTasks.filter { task in
+            !workspaceManager.activeWorkspaces.contains(where: { workspace in
+                workspace.agentId == task.agentId
+            })
+        }
+    }
+
+    // Group tasks by workspace
+    var tasksByWorkspace: [(workspace: ExecutorWorkspace, tasks: [AITask])] {
+        let workspaces = workspaceManager.activeWorkspaces
+        return workspaces.compactMap { workspace in
+            let tasksForWorkspace = filteredTasks.filter { $0.agentId == workspace.agentId }
+            guard !tasksForWorkspace.isEmpty else { return nil }
+            return (workspace, tasksForWorkspace)
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -71,37 +98,53 @@ struct AITasksView: View {
             Divider()
 
             // Content
-            HStack(spacing: 0) {
-                // Sidebar - Task List
-                AITasksSidebar(
+            if selectedTab == .history {
+                // Historical tasks: Display as cards
+                AITasksHistoryView(
                     tasks: filteredTasks,
                     selectedTask: $selectedTask,
                     isLoading: isLoading,
                     agents: agents,
-                    simpleTasks: tasks
+                    simpleTasks: tasks,
+                    onStatusUpdate: { id, status in
+                        await updateTaskStatus(id: id, status: status)
+                    }
                 )
-                .frame(width: 320)
-
-                Divider()
-
-                // Detail View
-                if executorManager.getZMemoryClient() == nil {
-                    SetupRequiredView()
-                } else if let selectedTask = selectedTask {
-                    AITaskDetailView(
-                        task: selectedTask,
-                        agent: agents.first(where: { $0.id == selectedTask.agentId }),
-                        simpleTask: tasks.first(where: { $0.id == selectedTask.taskId }),
-                        onStatusUpdate: { status in
-                            await updateTaskStatus(id: selectedTask.id, status: status)
-                        }
+            } else {
+                // Pending tasks: Left sidebar (unassigned) + Right side (grouped by workspace)
+                HStack(spacing: 0) {
+                    // Left Sidebar - Unassigned Tasks
+                    AITasksSidebar(
+                        tasks: unassignedTasks,
+                        selectedTask: $selectedTask,
+                        isLoading: isLoading,
+                        agents: agents,
+                        simpleTasks: tasks
                     )
-                } else {
-                    EmptyStateView(
-                        icon: "sparkles",
-                        message: "Select an AI Task",
-                        description: "Choose a task from the sidebar to view details"
-                    )
+                    .frame(width: 280)
+
+                    Divider()
+
+                    // Right Side - Workspace Queues
+                    if executorManager.getZMemoryClient() == nil {
+                        SetupRequiredView()
+                    } else if tasksByWorkspace.isEmpty && unassignedTasks.isEmpty {
+                        EmptyStateView(
+                            icon: "tray",
+                            message: "No Pending Tasks",
+                            description: "Pending tasks will appear here"
+                        )
+                    } else {
+                        AITasksWorkspaceQueuesView(
+                            tasksByWorkspace: tasksByWorkspace,
+                            selectedTask: $selectedTask,
+                            agents: agents,
+                            simpleTasks: tasks,
+                            onStatusUpdate: { id, status in
+                                await updateTaskStatus(id: id, status: status)
+                            }
+                        )
+                    }
                 }
             }
 

@@ -16,15 +16,45 @@ struct AITasksSidebar: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("Unassigned Tasks")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+
+                Spacer()
+
+                if !tasks.isEmpty {
+                    Text("\(tasks.count)")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule()
+                                .fill(Color.secondary.opacity(0.2))
+                        )
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+
+            Divider()
+
             if isLoading {
                 ProgressView()
                     .frame(maxHeight: .infinity)
             } else if tasks.isEmpty {
-                EmptyStateView(
-                    icon: "tray",
-                    message: "No AI Tasks",
-                    description: "AI tasks will appear here"
-                )
+                VStack(spacing: 8) {
+                    Image(systemName: "tray")
+                        .font(.largeTitle)
+                        .foregroundColor(.secondary)
+                    Text("No unassigned tasks")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
                 .frame(maxHeight: .infinity)
             } else {
                 ScrollView {
